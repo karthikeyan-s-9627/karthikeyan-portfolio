@@ -24,8 +24,23 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { PlusCircle, Trash2, Edit } from "lucide-react";
+import { PlusCircle, Trash2, Edit, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Project {
   id: string;
@@ -35,17 +50,58 @@ interface Project {
   github_link?: string;
   live_link?: string;
   image?: string;
+  position: number | null;
 }
+
+const SortableProjectRow: React.FC<{ project: Project; onEdit: (proj: Project) => void; onDelete: (id: string) => void; }> = ({ project, onEdit, onDelete }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: project.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <TableRow ref={setNodeRef} style={style}>
+      <TableCell className="w-12">
+        <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab">
+          <GripVertical className="h-4 w-4" />
+        </Button>
+      </TableCell>
+      <TableCell className="font-medium">{project.title}</TableCell>
+      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{project.description}</TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-1">
+          {project.technologies?.map((tech, idx) => (
+            <Badge key={idx} variant="outline" className="text-xs">{tech}</Badge>
+          ))}
+        </div>
+      </TableCell>
+      <TableCell className="text-right flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => onEdit(project)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="destructive" size="sm" onClick={() => onDelete(project.id)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+};
 
 const ProjectsManagement: React.FC = () => {
   const queryClient = useQueryClient();
-  const [newProject, setNewProject] = React.useState<Omit<Project, "id">>({
-    title: "",
-    description: "",
-    technologies: [],
-    github_link: "",
-    live_link: "",
-    image: "",
+  const [displayProjects, setDisplayProjects] = React.useState<Project[]>([]);
+  const [newProject, setNewProject] = React.useState<Omit<Project, "id" | "position">>({
+    title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
   });
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingProject, setEditingProject] = React.useState<Project | null>(null);
@@ -54,11 +110,40 @@ const ProjectsManagement: React.FC = () => {
   const { data: projects, isLoading, error } = useQuery<Project[], Error>({
     queryKey: ["projects"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("projects").select("*").order("position", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data;
     },
   });
+
+  const updateOrderMutation = useMutation<null, Error, { id: string; position: number }[], unknown>({
+    mutationFn: async (updates) => {
+      const { error } = await supabase.rpc('update_project_positions', { updates });
+      if (error) throw error;
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      showSuccess("Project order updated!");
+    },
+    onError: (err) => {
+      showError(`Error updating order: ${err.message}`);
+    },
+  });
+
+  React.useEffect(() => {
+    if (projects) {
+      const itemsWithNullPosition = projects.filter(p => p.position === null);
+      if (itemsWithNullPosition.length > 0) {
+        const updates = projects.map((proj, index) => ({
+          id: proj.id,
+          position: proj.position ?? index,
+        }));
+        updateOrderMutation.mutate(updates);
+      }
+      setDisplayProjects(projects);
+    }
+  }, [projects]);
 
   React.useEffect(() => {
     if (!isDialogOpen) {
@@ -84,15 +169,10 @@ const ProjectsManagement: React.FC = () => {
     },
   });
 
-  const updateProjectMutation = useMutation<null, Error, Project, unknown>({
+  const updateProjectMutation = useMutation<null, Error, Omit<Project, 'position'>, unknown>({
     mutationFn: async (project) => {
       const { error } = await supabase.from("projects").update({
-        title: project.title,
-        description: project.description,
-        technologies: project.technologies,
-        github_link: project.github_link,
-        live_link: project.live_link,
-        image: project.image,
+        title: project.title, description: project.description, technologies: project.technologies, github_link: project.github_link, live_link: project.live_link, image: project.image,
       }).eq("id", project.id);
       if (error) throw error;
       return null;
@@ -124,19 +204,13 @@ const ProjectsManagement: React.FC = () => {
 
   const handleAddTechnology = () => {
     if (techInput.trim() && !newProject.technologies.includes(techInput.trim())) {
-      setNewProject({
-        ...newProject,
-        technologies: [...newProject.technologies, techInput.trim()],
-      });
+      setNewProject({ ...newProject, technologies: [...newProject.technologies, techInput.trim()] });
       setTechInput("");
     }
   };
 
   const handleRemoveTechnology = (techToRemove: string) => {
-    setNewProject({
-      ...newProject,
-      technologies: newProject.technologies.filter((tech) => tech !== techToRemove),
-    });
+    setNewProject({ ...newProject, technologies: newProject.technologies.filter((tech) => tech !== techToRemove) });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -144,21 +218,36 @@ const ProjectsManagement: React.FC = () => {
     if (editingProject) {
       updateProjectMutation.mutate({ ...editingProject, ...newProject });
     } else {
-      addProjectMutation.mutate(newProject);
+      const maxPosition = displayProjects.length > 0 ? Math.max(...displayProjects.map(p => p.position || 0)) : -1;
+      const newPosition = maxPosition + 1;
+      addProjectMutation.mutate({ ...newProject, position: newPosition });
     }
   };
 
   const handleEditClick = (project: Project) => {
     setEditingProject(project);
     setNewProject({
-      title: project.title,
-      description: project.description,
-      technologies: project.technologies || [],
-      github_link: project.github_link || "",
-      live_link: project.live_link || "",
-      image: project.image || "",
+      title: project.title, description: project.description, technologies: project.technologies || [], github_link: project.github_link || "", live_link: project.live_link || "", image: project.image || "",
     });
     setIsDialogOpen(true);
+  };
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = displayProjects.findIndex((item) => item.id === active.id);
+      const newIndex = displayProjects.findIndex((item) => item.id === over.id);
+      const newOrder = arrayMove(displayProjects, oldIndex, newIndex);
+      setDisplayProjects(newOrder);
+
+      const updates = newOrder.map((item, index) => ({
+        id: item.id,
+        position: index,
+      }));
+      updateOrderMutation.mutate(updates);
+    }
   };
 
   if (isLoading) return <div className="text-center text-muted-foreground">Loading projects...</div>;
@@ -169,143 +258,50 @@ const ProjectsManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-foreground">Manage Projects</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add New Project
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4" /> Add New Project</Button></DialogTrigger>
           <DialogContent className="sm:max-w-[600px] bg-card border-border/50">
-            <DialogHeader>
-              <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">Title</Label>
-                <Input
-                  id="title"
-                  value={newProject.title}
-                  onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
-                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">Description</Label>
-                <Textarea
-                  id="description"
-                  value={newProject.description}
-                  onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
-                  required
-                />
-              </div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required /></div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="technologies" className="text-right">Technologies</Label>
                 <div className="col-span-3 flex flex-col gap-2">
                   <div className="flex gap-2">
-                    <Input
-                      id="technologies"
-                      value={techInput}
-                      onChange={(e) => setTechInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddTechnology();
-                        }
-                      }}
-                      placeholder="Add technology (e.g., React)"
-                      className="flex-grow bg-input/50 border-border/50 focus:border-primary"
-                    />
+                    <Input id="technologies" value={techInput} onChange={(e) => setTechInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTechnology(); } }} placeholder="Add technology (e.g., React)" className="flex-grow bg-input/50 border-border/50 focus:border-primary" />
                     <Button type="button" onClick={handleAddTechnology} variant="outline">Add</Button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {newProject.technologies.map((tech, index) => (
-                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                        {tech}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-auto p-0.5"
-                          onClick={() => handleRemoveTechnology(tech)}
-                        >
-                          &times;
-                        </Button>
-                      </Badge>
-                    ))}
-                  </div>
+                  <div className="flex flex-wrap gap-2">{newProject.technologies.map((tech, index) => (<Badge key={index} variant="secondary" className="flex items-center gap-1">{tech}<Button type="button" variant="ghost" size="sm" className="h-auto p-0.5" onClick={() => handleRemoveTechnology(tech)}>&times;</Button></Badge>))}</div>
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="github_link" className="text-right">GitHub Link (Optional)</Label>
-                <Input
-                  id="github_link"
-                  value={newProject.github_link}
-                  onChange={(e) => setNewProject({ ...newProject, github_link: e.target.value })}
-                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="live_link" className="text-right">Live Link (Optional)</Label>
-                <Input
-                  id="live_link"
-                  value={newProject.live_link}
-                  onChange={(e) => setNewProject({ ...newProject, live_link: e.target.value })}
-                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="image" className="text-right">Image URL (Optional)</Label>
-                <Input
-                  id="image"
-                  value={newProject.image}
-                  onChange={(e) => setNewProject({ ...newProject, image: e.target.value })}
-                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
-                />
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={addProjectMutation.isPending || updateProjectMutation.isPending}>
-                  {editingProject ? (updateProjectMutation.isPending ? "Saving..." : "Save Changes") : (addProjectMutation.isPending ? "Adding..." : "Add Project")}
-                </Button>
-              </DialogFooter>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="github_link" className="text-right">GitHub Link (Optional)</Label><Input id="github_link" value={newProject.github_link} onChange={(e) => setNewProject({ ...newProject, github_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="live_link" className="text-right">Live Link (Optional)</Label><Input id="live_link" value={newProject.live_link} onChange={(e) => setNewProject({ ...newProject, live_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="image" className="text-right">Image URL (Optional)</Label><Input id="image" value={newProject.image} onChange={(e) => setNewProject({ ...newProject, image: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <DialogFooter><Button type="submit" disabled={addProjectMutation.isPending || updateProjectMutation.isPending}>{editingProject ? (updateProjectMutation.isPending ? "Saving..." : "Save Changes") : (addProjectMutation.isPending ? "Adding..." : "Add Project")}</Button></DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
-
       <div className="rounded-md border border-border/50 shadow-lg overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12"></TableHead>
               <TableHead className="w-[150px]">Title</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="w-[200px]">Technologies</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {projects?.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell className="font-medium">{project.title}</TableCell>
-                <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{project.description}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {project.technologies?.map((tech, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">{tech}</Badge>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right flex justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleEditClick(project)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => deleteProjectMutation.mutate(project.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={displayProjects.map(p => p.id)} strategy={verticalListSortingStrategy}>
+              <TableBody>
+                {displayProjects.map((project) => (
+                  <SortableProjectRow key={project.id} project={project} onEdit={handleEditClick} onDelete={deleteProjectMutation.mutate} />
+                ))}
+              </TableBody>
+            </SortableContext>
+          </DndContext>
         </Table>
       </div>
     </div>
