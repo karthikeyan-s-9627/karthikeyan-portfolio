@@ -59,9 +59,9 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
         {certificates.map((cert, index) => (
           <motion.div
             key={index}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[350px] flex justify-center items-center backface-hidden"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[350px] flex justify-center items-center"
             style={{
-              transform: `rotateY(${index * angle}deg) translateZ(${radius}px)`,
+              transform: `rotateY(${index * angle}deg) translateZ(${radius}px) rotateY(${-index * angle}deg)`, // Position and counter-rotate
             }}
             variants={itemVariants}
             initial="hidden"
