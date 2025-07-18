@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User, Linkedin, Twitter, Instagram, Send, Loader2 } from "lucide-react";
+import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User, Linkedin, Twitter, Instagram, Send, Loader2, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -71,14 +71,32 @@ interface ContactInfo {
   updated_at: string;
 }
 
-const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001"; // Matches the default ID in SQL
-const CONTACT_INFO_SINGLETON_ID = "00000000-0000-0000-0000-000000000002"; // Matches the default ID in SQL
+interface SiteSettings {
+  maintenance_mode: boolean;
+}
+
+const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001";
+const CONTACT_INFO_SINGLETON_ID = "00000000-0000-0000-0000-000000000002";
+const SETTINGS_SINGLETON_ID = "00000000-0000-0000-0000-000000000004";
 
 const Home = () => {
   const [contactName, setContactName] = React.useState("");
   const [contactEmail, setContactEmail] = React.useState("");
   const [contactMessage, setContactMessage] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const { data: maintenanceStatus, isLoading: isLoadingStatus } = useQuery<SiteSettings, Error>({
+    queryKey: ["maintenance_status"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("maintenance_mode")
+        .eq("id", SETTINGS_SINGLETON_ID)
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data || { maintenance_mode: false };
+    },
+  });
 
   const sectionTitleVariants = {
     hidden: { opacity: 0, y: -50 },
@@ -205,7 +223,6 @@ const Home = () => {
         .eq("id", ABOUT_ME_SINGLETON_ID)
         .single();
       if (error) {
-        // If no record exists, return a default empty structure
         if (error.code === 'PGRST116') {
           return {
             id: ABOUT_ME_SINGLETON_ID,
@@ -224,17 +241,14 @@ const Home = () => {
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery<Profile, Error>({
     queryKey: ["profile_hero"],
     queryFn: async () => {
-      // Assuming the portfolio owner is the admin, we fetch their profile
-      // In a real app, you might have a specific 'portfolio_owner' profile or fetch by a known ID
       const { data: usersData, error: usersError } = await supabase
         .from("profiles")
         .select("id, first_name, last_name, tagline, hero_image_url")
-        .eq("is_admin", true) // Assuming the first admin user is the portfolio owner
+        .eq("is_admin", true)
         .limit(1)
         .single();
 
       if (usersError) {
-        // If no admin profile found, provide default values
         if (usersError.code === 'PGRST116') {
           return {
             id: "default",
@@ -281,8 +295,6 @@ const Home = () => {
     },
   });
 
-
-  // Group skills by category for display
   const groupedSkills = React.useMemo(() => {
     if (!skills) return {};
     return skills.reduce((acc, skill) => {
@@ -294,7 +306,6 @@ const Home = () => {
     }, {} as Record<string, string[]>);
   }, [skills]);
 
-  // Map string icons to Lucide components
   const skillCategoryIcons: Record<string, React.ElementType> = {
     "Programming Languages": Code,
     "Frontend Development": Lightbulb,
@@ -303,6 +314,28 @@ const Home = () => {
     "Tools & Technologies": Briefcase,
     "Concepts": Lightbulb,
   };
+
+  if (isLoadingStatus) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (maintenanceStatus?.maintenance_mode) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
+        <Wrench className="h-16 w-16 text-primary mb-6" />
+        <h1 className="text-4xl md:text-6xl font-extrabold mb-4 text-foreground">
+          Under Maintenance
+        </h1>
+        <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl">
+          Our website is currently undergoing scheduled maintenance. We should be back shortly. Thank you for your patience!
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-24 lg:space-y-32">

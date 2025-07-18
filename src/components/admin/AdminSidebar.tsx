@@ -3,7 +3,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Menu, LayoutDashboard, User, Code, Award, Briefcase, Mail, FileText, Info } from "lucide-react";
+import { Menu, LayoutDashboard, User, Code, Award, Briefcase, Mail, FileText, Info, Wrench } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,6 +26,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ currentSection, onSectionCh
     { name: "Contact Info", section: "contact-info", icon: Info },
     { name: "Resume", section: "resume", icon: FileText },
     { name: "Messages", section: "messages", icon: Mail },
+    { name: "Maintenance", section: "maintenance", icon: Wrench },
   ];
 
   const handleItemClick = (section: string) => {

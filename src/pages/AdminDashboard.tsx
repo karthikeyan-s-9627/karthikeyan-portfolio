@@ -14,6 +14,7 @@ import HeroManagement from "@/components/admin/HeroManagement";
 import ContactInfoManagement from "@/components/admin/ContactInfoManagement";
 import ResumeManagement from "@/components/admin/ResumeManagement";
 import AdminLayout from "@/components/layout/AdminLayout";
+import MaintenanceManagement from "@/components/admin/MaintenanceManagement";
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
@@ -77,6 +78,8 @@ const AdminDashboard: React.FC = () => {
         return <ResumeManagement />;
       case "messages":
         return <ContactMessagesManagement />;
+      case "maintenance":
+        return <MaintenanceManagement />;
       default:
         return <HeroManagement />;
     }
