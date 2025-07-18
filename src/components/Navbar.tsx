@@ -61,7 +61,7 @@ const Navbar = () => {
                         scrollToSection(link.path.substring(1)); // Remove '#'
                       }}
                       className={cn(
-                        "text-foreground hover:text-primary transition-colors duration-300 relative group text-lg font-medium block py-2"
+                        "text-foreground hover:text-primary transition-colors duration-300 relative group text-lg font-medium inline-block py-2" // Added inline-block
                       )}
                     >
                       {link.name}
@@ -85,7 +85,7 @@ const Navbar = () => {
                     scrollToSection(link.path.substring(1)); // Remove '#'
                   }}
                   className={cn(
-                    "text-foreground hover:text-primary transition-colors duration-300 relative group"
+                    "text-foreground hover:text-primary transition-colors duration-300 relative group inline-block" // Added inline-block
                   )}
                 >
                   {link.name}
