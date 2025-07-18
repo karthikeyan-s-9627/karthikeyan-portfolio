@@ -376,7 +376,7 @@ const Home = () => {
           My <span className="text-primary">Projects</span>
         </motion.h1>
 
-        <ProjectsSlider projects={projectsData} options={{ align: 'center' }} />
+        <ProjectsSlider projects={projectsData} />
       </section>
 
       {/* Contact Section */}

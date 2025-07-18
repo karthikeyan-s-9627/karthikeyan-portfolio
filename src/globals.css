@@ -162,26 +162,37 @@
   backface-visibility: hidden; /* Hides the back of the card when it rotates away */
 }
 
-/* Embla Carousel for Projects */
-.embla {
-  overflow: hidden;
+/* Continuous scroll animation for projects */
+@keyframes continuous-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
-.embla__container {
+
+.continuous-scroll-container {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+.continuous-scroll-content {
   display: flex;
-  gap: 1rem; 
-  align-items: flex-start; 
+  width: max-content;
+  animation: continuous-scroll 60s linear infinite;
 }
-.embla__slide {
-  flex: 0 0 70%;
-  min-width: 0;
-  position: relative;
+
+.continuous-scroll-content:hover {
+  animation-play-state: paused;
+}
+
+.project-slide {
+  width: 70vw;
+  max-width: 500px;
   height: 70vh;
   max-height: 600px;
+  margin-right: 1rem;
 }
 
 @media (max-width: 768px) {
-  .embla__slide {
-    flex: 0 0 85%;
-    height: 65vh;
+  .project-slide {
+    width: 85vw;
   }
 }
