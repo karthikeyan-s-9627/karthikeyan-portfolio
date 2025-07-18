@@ -27,7 +27,8 @@ const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects }) => {
       <div className="flex continuous-scroll-content">
         {duplicatedProjects.map((project, index) => (
           <div className="project-slide" key={index}>
-            <Card className="h-full bg-card/80 backdrop-blur-sm shadow-2xl border border-border/50 rounded-xl overflow-hidden flex flex-col">
+            <Card className="h-full bg-card/80 backdrop-blur-sm shadow-2xl border border-border/50 rounded-xl overflow-hidden flex flex-col
+              hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300">
               <div className="relative h-[60%]">
                 <img
                   src={project.image}

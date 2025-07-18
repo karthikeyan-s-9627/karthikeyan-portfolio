@@ -180,9 +180,7 @@
   animation: continuous-scroll 20s linear infinite;
 }
 
-.continuous-scroll-content:hover {
-  animation-play-state: paused;
-}
+/* Removed: .continuous-scroll-content:hover { animation-play-state: paused; } */
 
 .project-slide {
   width: 70vw;
