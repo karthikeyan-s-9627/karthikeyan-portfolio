@@ -4,7 +4,77 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Github, Mail, Phone, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { showSuccess } from "@/utils/toast";
+
+// Data for sections (moved from individual pages)
+const skillsData = {
+  "Programming Languages": ["TypeScript", "JavaScript", "Python", "Java", "C++"],
+  "Frontend Development": ["React", "Next.js", "HTML5", "CSS3", "Tailwind CSS", "Shadcn/UI", "Framer Motion"],
+  "Backend Development": ["Node.js", "Express.js", "REST APIs", "GraphQL"],
+  "Databases": ["PostgreSQL", "MongoDB", "MySQL", "Supabase"],
+  "Tools & Technologies": ["Git", "Docker", "VS Code", "Jira", "Figma"],
+  "Concepts": ["Object-Oriented Programming", "Data Structures & Algorithms", "Responsive Design", "Agile Methodologies"],
+};
+
+const certificatesData = [
+  {
+    title: "Full Stack Web Development Bootcamp",
+    issuer: "Udemy",
+    date: "May 2023",
+    description: "Comprehensive course covering MERN stack development, including React, Node.js, Express, and MongoDB.",
+    link: "#", // Placeholder link
+  },
+  {
+    title: "Machine Learning Specialization",
+    issuer: "Coursera (DeepLearning.AI)",
+    date: "August 2023",
+    description: "Specialization focused on supervised learning, unsupervised learning, and neural networks.",
+    link: "#", // Placeholder link
+  },
+  {
+    title: "AWS Certified Cloud Practitioner",
+    issuer: "Amazon Web Services (AWS)",
+    date: "November 2023",
+    description: "Foundational understanding of AWS cloud concepts, services, security, architecture, pricing, and support.",
+    link: "#", // Placeholder link
+  },
+];
+
+const projectsData = [
+  {
+    title: "E-commerce Platform",
+    description: "A full-stack e-commerce application with user authentication, product listings, shopping cart, and payment integration.",
+    technologies: ["React", "Node.js", "Express", "MongoDB", "Stripe", "Tailwind CSS"],
+    githubLink: "#", // Placeholder link
+    liveLink: "#", // Placeholder link
+  },
+  {
+    title: "AI Chatbot Assistant",
+    description: "An intelligent chatbot powered by natural language processing, capable of answering queries and performing tasks.",
+    technologies: ["Python", "Flask", "OpenAI API", "React", "TypeScript"],
+    githubLink: "#", // Placeholder link
+    liveLink: "#", // Placeholder link
+  },
+  {
+    title: "Personal Blog Site",
+    description: "A responsive blog platform with a rich text editor, comment section, and admin panel for content management.",
+    technologies: ["Next.js", "TypeScript", "Sanity.io", "GraphQL", "Tailwind CSS"],
+    githubLink: "#", // Placeholder link
+    liveLink: "#", // Placeholder link
+  },
+  {
+    title: "Task Management App",
+    description: "A simple and intuitive task management application with drag-and-drop functionality and user-specific dashboards.",
+    technologies: ["React", "Redux", "Firebase", "Chakra UI"],
+    githubLink: "#", // Placeholder link
+    liveLink: "#", // Placeholder link
+  },
+];
 
 const Home = () => {
   const containerVariants = {
@@ -12,13 +82,13 @@ const Home = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
+        staggerChildren: 0.1,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20, rotateX: 90, transformOrigin: "bottom" },
+    hidden: { opacity: 0, y: 50, rotateX: 90, transformOrigin: "bottom" },
     visible: {
       opacity: 1,
       y: 0,
@@ -31,66 +101,379 @@ const Home = () => {
     },
   };
 
-  return (
-    <motion.div
-      className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center text-center p-4"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.h1
-        className="text-5xl md:text-7xl font-extrabold mb-4 text-foreground drop-shadow-lg"
-        variants={itemVariants}
-      >
-        Hi, I'm <span className="text-primary">John Doe</span>
-      </motion.h1>
-      <motion.p
-        className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl"
-        variants={itemVariants}
-      >
-        A passionate college student building innovative solutions and exploring the frontiers of technology.
-      </motion.p>
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.8, rotateY: 45 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      rotateY: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10,
+      },
+    },
+  };
 
-      <motion.div
-        className="perspective-1000"
-        variants={itemVariants}
-      >
-        <Card className="w-full max-w-md mx-auto bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-          hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
-          hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted!");
+    showSuccess("Your message has been sent!");
+  };
+
+  return (
+    <div className="space-y-24 lg:space-y-32">
+      {/* Hero Section */}
+      <section id="home" className="min-h-[calc(100vh-120px)] flex flex-col lg:flex-row items-center justify-center text-center lg:text-left p-4 pt-20 lg:pt-0">
+        <div className="flex-1 flex flex-col items-center lg:items-start justify-center">
+          <motion.h1
+            className="text-5xl md:text-7xl font-extrabold mb-4 text-foreground drop-shadow-lg"
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            Hi, I'm <span className="text-primary">John Doe</span>
+          </motion.h1>
+          <motion.p
+            className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl"
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.2, ...itemVariants.visible.transition }}
+          >
+            A passionate college student building innovative solutions and exploring the frontiers of technology.
+          </motion.p>
+
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <a href="#projects">
+              <Button className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
+                bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300
+                hover:shadow-primary/70 hover:scale-105 glow-button">
+                View Projects
+              </Button>
+            </a>
+            <a href="#contact">
+              <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
+                border-primary text-primary hover:bg-primary/10 transition-all duration-300
+                hover:shadow-primary/30 hover:scale-105 glow-button-outline">
+                Get in Touch
+              </Button>
+            </a>
+          </motion.div>
+        </div>
+        <motion.div
+          className="flex-1 flex justify-center lg:justify-end mt-12 lg:mt-0 perspective-1000"
+          initial={{ opacity: 0, scale: 0.8, rotateY: 45 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          transition={{ type: "spring", stiffness: 100, damping: 10, delay: 0.6 }}
         >
-          <CardHeader className="p-6">
-            <CardTitle className="text-3xl font-bold text-primary mb-2">Welcome to My Portfolio</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Explore my journey, projects, and skills.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6 pt-0">
+          <img
+            src="https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image" // Placeholder image
+            alt="John Doe"
+            className="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full object-cover
+              shadow-2xl border-4 border-transparent
+              hover:scale-105 transition-transform duration-500 ease-in-out
+              glow-image" // Custom class for neon effect
+          />
+        </motion.div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
+        <motion.h1
+          className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
+          variants={itemVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          About <span className="text-primary">Me</span>
+        </motion.h1>
+
+        <motion.div
+          className="w-full max-w-3xl perspective-1000"
+          variants={itemVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          <Card className="bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+            hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
+            hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
+          >
+            <CardHeader className="p-6">
+              <CardTitle className="text-2xl font-bold text-primary mb-2">My Journey So Far</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0 text-lg text-muted-foreground leading-relaxed">
+              <motion.p variants={itemVariants} className="mb-4">
+                Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.
+              </motion.p>
+              <motion.p variants={itemVariants} className="mb-4">
+                My academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.
+              </motion.p>
+              <motion.p variants={itemVariants}>
+                Outside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.
+              </motion.p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </section>
+
+      {/* Skills Section */}
+      <section id="skills" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
+        <motion.h1
+          className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
+          variants={itemVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          My <span className="text-primary">Skills</span>
+        </motion.h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+          {Object.entries(skillsData).map(([category, skills], index) => (
             <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
+              key={category}
+              className="perspective-1000"
+              variants={cardVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              custom={index}
             >
-              <Link to="/projects">
-                <Button className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
-                  bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300
-                  hover:shadow-primary/70 hover:scale-105 glow-button">
-                  View Projects
-                </Button>
-              </Link>
-              <Link to="/contact">
-                <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
-                  border-primary text-primary hover:bg-primary/10 transition-all duration-300
-                  hover:shadow-primary/30 hover:scale-105 glow-button-outline">
-                  Get in Touch
-                </Button>
-              </Link>
+              <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
+                hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+              >
+                <CardHeader className="p-6 pb-4">
+                  <CardTitle className="text-xl font-bold text-primary">{category}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 pt-0 flex flex-wrap gap-2">
+                  {skills.map((skill) => (
+                    <Badge
+                      key={skill}
+                      variant="secondary"
+                      className="px-3 py-1 text-sm rounded-full bg-secondary/80 text-secondary-foreground
+                        hover:bg-secondary/100 hover:scale-105 transition-transform duration-200
+                        shadow-md hover:shadow-lg"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+                </CardContent>
+              </Card>
             </motion.div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Certificates Section */}
+      <section id="certificates" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
+        <motion.h1
+          className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
+          variants={itemVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          My <span className="text-primary">Certificates</span>
+        </motion.h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+          {certificatesData.map((cert, index) => (
+            <motion.div
+              key={index}
+              className="perspective-1000"
+              variants={cardVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              custom={index}
+            >
+              <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
+                hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+              >
+                <CardHeader className="p-6 pb-4">
+                  <CardTitle className="text-xl font-bold text-primary mb-1">{cert.title}</CardTitle>
+                  <CardDescription className="text-muted-foreground text-sm">
+                    {cert.issuer} | {cert.date}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 pt-0">
+                  <p className="text-muted-foreground mb-4">{cert.description}</p>
+                  {cert.link && (
+                    <a href={cert.link} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" className="w-full glow-button-outline">
+                        View Credential <ExternalLink className="ml-2 h-4 w-4" />
+                      </Button>
+                    </a>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Projects Section */}
+      <section id="projects" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
+        <motion.h1
+          className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
+          variants={itemVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          My <span className="text-primary">Projects</span>
+        </motion.h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+          {projectsData.map((project, index) => (
+            <motion.div
+              key={index}
+              className="perspective-1000"
+              variants={cardVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              custom={index}
+            >
+              <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
+                hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+              >
+                <CardHeader className="p-6 pb-4">
+                  <CardTitle className="text-xl font-bold text-primary mb-2">{project.title}</CardTitle>
+                  <CardDescription className="text-muted-foreground">{project.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 pt-0">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {project.technologies.map((tech) => (
+                      <Badge key={tech} variant="outline" className="bg-secondary/80 text-secondary-foreground">
+                        {tech}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-3">
+                    {project.githubLink && (
+                      <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="flex-1">
+                        <Button variant="outline" className="w-full glow-button-outline">
+                          <Github className="mr-2 h-4 w-4" /> GitHub
+                        </Button>
+                      </a>
+                    )}
+                    {project.liveLink && (
+                      <a href={project.liveLink} target="_blank" rel="noopener noreferrer" className="flex-1">
+                        <Button className="w-full glow-button">
+                          <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
+        <motion.h1
+          className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
+          variants={itemVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          Get in <span className="text-primary">Touch</span>
+        </motion.h1>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl">
+          <motion.div
+            className="perspective-1000"
+            variants={itemVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
+              hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
+            >
+              <CardHeader className="p-6 pb-4">
+                <CardTitle className="text-2xl font-bold text-primary mb-2">Contact Information</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Feel free to reach out through any of these channels.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-4 text-lg text-muted-foreground">
+                <motion.div variants={itemVariants} className="flex items-center gap-3">
+                  <Mail className="h-6 w-6 text-primary" />
+                  <span>johndoe@example.com</span>
+                </motion.div>
+                <motion.div variants={itemVariants} className="flex items-center gap-3">
+                  <Phone className="h-6 w-6 text-primary" />
+                  <span>+1 (123) 456-7890</span>
+                </motion.div>
+                <motion.div variants={itemVariants} className="flex items-center gap-3">
+                  <MapPin className="h-6 w-6 text-primary" />
+                  <span>Anytown, USA</span>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            className="perspective-1000"
+            variants={itemVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
+              hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
+            >
+              <CardHeader className="p-6 pb-4">
+                <CardTitle className="text-2xl font-bold text-primary mb-2">Send a Message</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  I'll get back to you as soon as possible.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <motion.div variants={itemVariants}>
+                    <Label htmlFor="name" className="text-foreground">Name</Label>
+                    <Input id="name" placeholder="Your Name" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <Label htmlFor="email" className="text-foreground">Email</Label>
+                    <Input id="email" type="email" placeholder="your@email.com" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <Label htmlFor="message" className="text-foreground">Message</Label>
+                    <Textarea id="message" placeholder="Your message..." rows={5} className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <Button type="submit" className="w-full glow-button">
+                      Send Message
+                    </Button>
+                  </motion.div>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+    </div>
   );
 };
 

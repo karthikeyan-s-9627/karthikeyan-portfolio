@@ -155,4 +155,19 @@
   box-shadow: 0 0 8px var(--primary), 0 0 15px var(--primary);
 }
 
+/* Neon glow for image */
+.glow-image {
+  box-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--primary);
+  animation: pulse-glow 2s infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--primary);
+  }
+  100% {
+    box-shadow: 0 0 15px var(--primary), 0 0 25px var(--primary), 0 0 40px var(--primary);
+  }
+}
+
 /* Glassmorphism effect (already handled by backdrop-blur-md and bg-card/70) */
