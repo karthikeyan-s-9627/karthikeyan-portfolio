@@ -22,13 +22,13 @@ interface CertificatesCarouselProps {
 const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificates }) => {
   const numCertificates = certificates.length;
   const angle = 360 / numCertificates;
-  const radius = 300; // Adjust this value to change the circle's radius
+  const radius = 250; // Adjusted radius for a tighter circle
 
   const carouselVariants = {
     animate: {
       rotateY: 360,
       transition: {
-        duration: 30, // Adjust speed of rotation
+        duration: 15, // Faster rotation speed
         ease: "linear",
         repeat: Infinity,
       },
@@ -49,7 +49,7 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
   };
 
   return (
-    <div className="relative w-full h-[400px] flex justify-center items-center perspective-[1000px]">
+    <div className="relative w-full h-[500px] flex justify-center items-center perspective-1000"> {/* Increased height and explicit perspective class */}
       <motion.div
         className="relative w-full h-full preserve-3d"
         variants={carouselVariants}
