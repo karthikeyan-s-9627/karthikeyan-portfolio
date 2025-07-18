@@ -22,13 +22,18 @@ interface CertificatesCarouselProps {
 const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificates }) => {
   const numCertificates = certificates.length;
   const angle = 360 / numCertificates;
-  const radius = 350; // Radius for the circular arrangement
+  const radius = 600; // Increased radius for more depth, similar to the example
 
   const carouselVariants = {
+    initial: {
+      rotateY: 0,
+      rotateX: -16, // Add a slight tilt to the carousel
+    },
     animate: {
       rotateY: 360, // Rotate around Y-axis for horizontal revolution
+      rotateX: -16, // Maintain the tilt during animation
       transition: {
-        duration: 25, // Duration for one full rotation
+        duration: 20, // Adjusted duration to match the example's speed
         ease: "linear",
         repeat: Infinity,
       },
@@ -53,7 +58,7 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
       <motion.div
         className="relative w-full h-full preserve-3d"
         variants={carouselVariants}
-        initial="animate"
+        initial="initial"
         animate="animate"
       >
         {certificates.map((cert, index) => (
@@ -61,7 +66,7 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
             key={index}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[350px] flex justify-center items-center"
             style={{
-              transform: `rotateY(${index * angle}deg) translateZ(${radius}px) rotateY(${-index * angle}deg)`, // Position and counter-rotate
+              transform: `rotateY(${index * angle}deg) translateZ(${radius}px)`, // Position without counter-rotation
             }}
             variants={itemVariants}
             initial="hidden"
