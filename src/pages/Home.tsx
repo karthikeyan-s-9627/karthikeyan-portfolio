@@ -213,8 +213,8 @@ const Home = () => {
             src="https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image" // Placeholder image
             alt="John Doe"
             className="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full object-cover
-              shadow-2xl border-4 border-primary/30
-              hover:scale-105 transition-transform duration-500 ease-in-out"
+              border-4 border-primary/30
+              hover:scale-105 transition-transform duration-500 ease-in-out neon-shadow-primary"
           />
         </motion.div>
       </section>
