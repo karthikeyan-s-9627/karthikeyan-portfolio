@@ -161,3 +161,27 @@
   inset: 0;
   backface-visibility: hidden; /* Hides the back of the card when it rotates away */
 }
+
+/* Embla Carousel for Projects */
+.embla {
+  overflow: hidden;
+}
+.embla__container {
+  display: flex;
+  gap: 1rem; 
+  align-items: flex-start; 
+}
+.embla__slide {
+  flex: 0 0 70%;
+  min-width: 0;
+  position: relative;
+  height: 70vh;
+  max-height: 600px;
+}
+
+@media (max-width: 768px) {
+  .embla__slide {
+    flex: 0 0 85%;
+    height: 65vh;
+  }
+}

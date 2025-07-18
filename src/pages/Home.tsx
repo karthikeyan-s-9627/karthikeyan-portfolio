@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { showSuccess } from "@/utils/toast";
-import CertificatesCarousel from "@/components/CertificatesCarousel"; // Import the new component
+import CertificatesCarousel from "@/components/CertificatesCarousel";
+import ProjectsSlider from "@/components/ProjectsSlider";
 
 // Data for sections (moved from individual pages)
 const skillsData = {
@@ -364,9 +365,9 @@ const Home = () => {
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
+      <section id="projects" className="min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
         <motion.h1
-          className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
+          className="text-4xl md:text-6xl font-extrabold mb-12 text-foreground drop-shadow-lg"
           variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
@@ -375,55 +376,7 @@ const Home = () => {
           My <span className="text-primary">Projects</span>
         </motion.h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-          {projectsData.map((project, index) => (
-            <motion.div
-              key={index}
-              variants={cardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.3 }}
-              custom={index}
-            >
-              <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
-              >
-                <CardHeader className="p-0">
-                  <img src={project.image} alt={project.title} className="w-full h-48 object-cover rounded-t-xl border-b border-border/50" />
-                  <div className="p-6 pb-4">
-                    <CardTitle className="text-xl font-bold text-primary mb-2">{project.title}</CardTitle>
-                    <CardDescription className="text-muted-foreground text-sm">{project.description}</CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {project.technologies.map((tech) => (
-                      <Badge key={tech} variant="outline" className="bg-secondary/80 text-secondary-foreground border border-primary/20">
-                        {tech}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-3">
-                    {project.githubLink && (
-                      <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="flex-1">
-                        <Button variant="outline" className="w-full">
-                          <Github className="mr-2 h-4 w-4" /> GitHub
-                        </Button>
-                      </a>
-                    )}
-                    {project.liveLink && (
-                      <a href={project.liveLink} target="_blank" rel="noopener noreferrer" className="flex-1">
-                        <Button className="w-full">
-                          <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
-                        </Button>
-                      </a>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        <ProjectsSlider projects={projectsData} options={{ align: 'center' }} />
       </section>
 
       {/* Contact Section */}
