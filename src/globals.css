@@ -111,6 +111,7 @@
     linear-gradient(to right, hsl(var(--border)/0.1) 1px, transparent 1px),
     linear-gradient(to bottom, hsl(var(--border)/0.1) 1px, transparent 1px);
   background-size: 40px 40px; /* Size of the grid cells */
+  /* animation: background-pan 30s linear infinite; */ /* DISABLED FOR PERFORMANCE */
   opacity: 0.3; /* Subtle opacity */
 }
 
@@ -123,6 +124,7 @@
   height: 100%;
   z-index: -2; /* Even further back */
   background: radial-gradient(circle at center, hsl(var(--primary)/0.1) 0%, transparent 50%);
+  /* animation: radial-pulse 10s infinite alternate; */ /* DISABLED FOR PERFORMANCE */
 }
 
 .neon-shadow-primary {
@@ -133,7 +135,7 @@
     0 0 40px hsl(var(--primary));
 }
 
-/* Custom CSS for 3D carousel */
+/* Custom CSS for 3D carousel based on user's example */
 @keyframes carouselAutoRun {
   from {
     transform: perspective(1000px) rotateX(-16deg) rotateY(0deg);
@@ -145,36 +147,19 @@
 
 .carousel-slider {
   position: absolute;
-  width: 180px;
-  height: 230px;
+  width: 200px; /* Reduced from 300px */
+  height: 250px; /* Reduced from 350px */
   top: 15%;
-  left: calc(50% - 90px);
+  left: calc(50% - 100px); /* Adjusted for new width */
   transform-style: preserve-3d;
-  transform: perspective(800px);
+  transform: perspective(1000px); /* Set initial perspective */
   animation: carouselAutoRun 25s linear infinite;
-}
-
-@media (min-width: 768px) {
-  .carousel-slider {
-    width: 220px;
-    height: 280px;
-    left: calc(50% - 110px);
-    transform: perspective(1000px);
-  }
-}
-
-@media (min-width: 1024px) {
-  .carousel-slider {
-    width: 250px;
-    height: 320px;
-    left: calc(50% - 125px);
-  }
 }
 
 .carousel-item {
   position: absolute;
   inset: 0;
-  backface-visibility: hidden;
+  backface-visibility: hidden; /* Hides the back of the card when it rotates away */
 }
 
 /* Continuous scroll animation for projects */
@@ -191,7 +176,7 @@
 .continuous-scroll-content {
   display: flex;
   width: max-content;
-  animation: continuous-scroll 40s linear infinite;
+  animation: continuous-scroll 20s linear infinite;
 }
 
 .continuous-scroll-content:hover {
@@ -199,16 +184,15 @@
 }
 
 .project-slide {
-  width: 85vw;
+  width: 70vw;
   max-width: 500px;
-  height: auto;
-  aspect-ratio: 4 / 5;
+  height: 70vh;
+  max-height: 600px;
   margin-right: 1rem;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 768px) {
   .project-slide {
-    width: 70vw;
-    margin-right: 2rem;
+    width: 85vw;
   }
 }

@@ -212,7 +212,7 @@ const Home = () => {
             Hi, I'm <span className="text-primary">John Doe</span>
           </motion.h1>
           <motion.p
-            className="text-lg md:text-2xl text-muted-foreground mb-8 max-w-2xl"
+            className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl"
             variants={itemVariants}
             initial="hidden"
             animate="visible"
@@ -287,7 +287,7 @@ const Home = () => {
                   <User className="h-6 w-6" /> My Journey So Far
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 pt-0 text-base md:text-lg text-muted-foreground leading-relaxed">
+              <CardContent className="p-6 pt-0 text-lg text-muted-foreground leading-relaxed">
                 <p className="mb-4">
                   Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.
                 </p>
@@ -324,7 +324,7 @@ const Home = () => {
         </motion.h1>
 
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full max-w-6xl [perspective:1200px]"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl [perspective:1200px]"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -368,7 +368,7 @@ const Home = () => {
       </section>
 
       {/* Certificates Section */}
-      <section id="certificates" className="flex flex-col items-center justify-center p-4 pb-16 min-h-[800px]">
+      <section id="certificates" className="min-h-screen flex flex-col items-center justify-center p-4">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
           variants={sectionTitleVariants}
@@ -379,11 +379,12 @@ const Home = () => {
           My <span className="text-primary">Certificates</span>
         </motion.h1>
 
+        {/* Use the new CertificatesCarousel component */}
         <CertificatesCarousel certificates={certificatesData} />
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="flex flex-col items-center justify-center p-4 overflow-hidden">
+      <section id="projects" className="min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-12 text-foreground drop-shadow-lg"
           variants={sectionTitleVariants}
@@ -425,10 +426,10 @@ const Home = () => {
                   Feel free to reach out through any of these channels.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-4 text-base md:text-lg text-muted-foreground">
+              <CardContent className="p-6 pt-0 space-y-4 text-lg text-muted-foreground">
                 <div className="flex items-center gap-3">
                   <Mail className="h-6 w-6 text-primary" />
-                  <a href="mailto:johndoe@example.com" className="hover:text-primary transition-colors break-all">johndoe@example.com</a>
+                  <a href="mailto:johndoe@example.com" className="hover:text-primary transition-colors">johndoe@example.com</a>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="h-6 w-6 text-primary" />
