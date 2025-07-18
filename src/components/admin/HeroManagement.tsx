@@ -46,7 +46,18 @@ const HeroManagement: React.FC = () => {
         .select("id, first_name, last_name, tagline, hero_image_url")
         .eq("id", userId)
         .single();
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116') { // No rows found
+          return {
+            id: userId,
+            first_name: "John",
+            last_name: "Doe",
+            tagline: "A passionate college student building innovative solutions and exploring the frontiers of technology.",
+            hero_image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image",
+          };
+        }
+        throw error;
+      }
       return data;
     },
     enabled: !!userId, // Only run query if userId is available
@@ -63,7 +74,7 @@ const HeroManagement: React.FC = () => {
       if (!userId) throw new Error("User ID not available for update.");
       const { error } = await supabase
         .from("profiles")
-        .update(profileData)
+        .upsert({ id: userId, ...profileData }) // Use upsert to create if not exists
         .eq("id", userId);
       if (error) throw error;
       return null;
@@ -88,7 +99,7 @@ const HeroManagement: React.FC = () => {
   };
 
   if (isLoading) return <div className="text-center text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-5 w-5 animate-spin" /> Loading hero section content...</div>;
-  if (error) return <div className="text-center text-destructive">Error: {error.message}</div>;
+  if (error && error.code !== 'PGRST116') return <div className="text-center text-destructive">Error: {error.message}</div>;
   if (!userId) return <div className="text-center text-muted-foreground">Please log in to manage the hero section.</div>;
 
 

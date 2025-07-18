@@ -38,8 +38,8 @@ const AboutMeManagement: React.FC = () => {
         if (error.code === 'PGRST116') { // No rows found
           return {
             id: ABOUT_ME_SINGLETON_ID,
-            content: "",
-            image_url: "",
+            content: "Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.\n\nMy academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.\n\nOutside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.",
+            image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image",
             updated_at: new Date().toISOString(),
           };
         }
