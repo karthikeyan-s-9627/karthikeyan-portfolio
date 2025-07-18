@@ -25,7 +25,7 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
   const radius = 300; // Reduced from 450
 
   return (
-    <div className="relative w-full h-[400px] overflow-hidden">
+    <div className="relative w-full h-[500px]">
       <div className="carousel-slider">
         {certificates.map((cert, index) => (
           <div
