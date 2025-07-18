@@ -58,11 +58,13 @@ const CertificatesManagement: React.FC = () => {
     },
   });
 
-  const addCertificateMutation = useMutation<null, Error, Omit<Certificate, "id">, unknown>({
-    mutationFn: async (certificate) => {
-      const { error } = await supabase.from("certificates").insert(certificate);
-      if (error) throw error;
-      return null;
+  const addCertificateMutation = useMutation({
+    mutationFn: async (certificate: Omit<Certificate, "id">) => {
+      const { data, error } = await supabase.from("certificates").insert(certificate).select();
+      if (error) {
+        throw error;
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
@@ -70,7 +72,7 @@ const CertificatesManagement: React.FC = () => {
       setNewCertificate({ title: "", issuer: "", date: "", description: "", link: "", image: "" });
       setIsDialogOpen(false);
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       showError(`Error adding certificate: ${err.message}`);
     },
   });

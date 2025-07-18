@@ -25,6 +25,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { PlusCircle, Trash2, Edit } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Project {
   id: string;
@@ -59,11 +60,13 @@ const ProjectsManagement: React.FC = () => {
     },
   });
 
-  const addProjectMutation = useMutation<null, Error, Omit<Project, "id">, unknown>({
-    mutationFn: async (project) => {
-      const { error } = await supabase.from("projects").insert(project);
-      if (error) throw error;
-      return null;
+  const addProjectMutation = useMutation({
+    mutationFn: async (project: Omit<Project, "id">) => {
+      const { data, error } = await supabase.from("projects").insert(project).select();
+      if (error) {
+        throw error;
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -72,7 +75,7 @@ const ProjectsManagement: React.FC = () => {
       setTechInput("");
       setIsDialogOpen(false);
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       showError(`Error adding project: ${err.message}`);
     },
   });

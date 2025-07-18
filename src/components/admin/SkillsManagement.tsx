@@ -47,11 +47,13 @@ const SkillsManagement: React.FC = () => {
     },
   });
 
-  const addSkillMutation = useMutation<null, Error, Omit<Skill, "id">, unknown>({
-    mutationFn: async (skill) => {
-      const { error } = await supabase.from("skills").insert(skill);
-      if (error) throw error;
-      return null;
+  const addSkillMutation = useMutation({
+    mutationFn: async (skill: Omit<Skill, "id">) => {
+      const { data, error } = await supabase.from("skills").insert(skill).select();
+      if (error) {
+        throw error;
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
@@ -60,7 +62,7 @@ const SkillsManagement: React.FC = () => {
       setNewSkillName("");
       setIsDialogOpen(false);
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       showError(`Error adding skill: ${err.message}`);
     },
   });
