@@ -20,9 +20,25 @@ interface CertificatesCarouselProps {
 }
 
 const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificates }) => {
+  const [radius, setRadius] = React.useState(300);
   const numCertificates = certificates.length;
   const angle = 360 / numCertificates;
-  const radius = 300; // Reduced from 450
+
+  React.useEffect(() => {
+    const updateRadius = () => {
+      if (window.innerWidth < 768) {
+        setRadius(220); // Mobile
+      } else if (window.innerWidth < 1024) {
+        setRadius(280); // Tablet
+      } else {
+        setRadius(320); // Desktop
+      }
+    };
+
+    updateRadius();
+    window.addEventListener('resize', updateRadius);
+    return () => window.removeEventListener('resize', updateRadius);
+  }, []);
 
   return (
     <div className="relative w-full h-[500px]">
@@ -41,23 +57,23 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
               transition={{ delay: index * 0.1, duration: 0.5 }}
             >
               <Card className="w-full h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300">
+                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300 flex flex-col">
                 <CardHeader className="p-0">
-                  <img src={cert.image} alt={cert.title} className="w-full h-32 object-cover rounded-t-xl border-b border-border/50" />
+                  <img src={cert.image} alt={cert.title} className="w-full h-24 md:h-32 object-cover rounded-t-xl border-b border-border/50" />
                   <div className="p-4 pb-2">
-                    <CardTitle className="text-lg font-bold text-primary mb-1 flex items-center gap-2">
+                    <CardTitle className="text-base md:text-lg font-bold text-primary mb-1 flex items-center gap-2">
                       <Award className="h-5 w-5" /> {cert.title}
                     </CardTitle>
-                    <CardDescription className="text-muted-foreground text-xs">
+                    <CardDescription className="text-muted-foreground text-[11px] md:text-xs">
                       {cert.issuer} | {cert.date}
                     </CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                    <p className="text-muted-foreground mb-3 text-xs">{cert.description}</p>
+                <CardContent className="p-4 pt-0 flex flex-col flex-grow">
+                    <p className="text-muted-foreground mb-3 text-[11px] md:text-xs flex-grow">{cert.description}</p>
                     {cert.link && (
-                      <a href={cert.link} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm" className="w-full">
+                      <a href={cert.link} target="_blank" rel="noopener noreferrer" className="mt-auto">
+                        <Button variant="outline" size="sm" className="w-full text-xs">
                           View Credential <ExternalLink className="ml-2 h-3 w-3" />
                         </Button>
                       </a>
