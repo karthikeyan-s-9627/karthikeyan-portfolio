@@ -3,9 +3,8 @@
 import React from "react";
 import AuthForm from "@/components/AuthForm";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { showError } from "@/utils/toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SkillsManagement from "@/components/admin/SkillsManagement";
 import CertificatesManagement from "@/components/admin/CertificatesManagement";
 import ProjectsManagement from "@/components/admin/ProjectsManagement";
@@ -13,11 +12,14 @@ import ContactMessagesManagement from "@/components/admin/ContactMessagesManagem
 import AboutMeManagement from "@/components/admin/AboutMeManagement";
 import HeroManagement from "@/components/admin/HeroManagement";
 import ContactInfoManagement from "@/components/admin/ContactInfoManagement";
+import ResumeManagement from "@/components/admin/ResumeManagement"; // Ensure this is imported
+import AdminLayout from "@/components/layout/AdminLayout"; // Import AdminLayout
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [loadingAdminCheck, setLoadingAdminCheck] = React.useState(true);
+  const [currentSection, setCurrentSection] = React.useState("hero-section"); // State to manage current section
 
   React.useEffect(() => {
     const checkSessionAndAdminStatus = async () => {
@@ -40,9 +42,6 @@ const AdminDashboard: React.FC = () => {
           setIsAdmin(true);
         } else {
           setIsAdmin(false);
-          // Optionally, log out non-admin users if they somehow reach here
-          // await supabase.auth.signOut();
-          // showError("You do not have admin privileges.");
         }
       } else {
         setIsAdmin(false);
@@ -54,97 +53,67 @@ const AdminDashboard: React.FC = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      checkSessionAndAdminStatus(); // Re-check admin status on auth state change
+      checkSessionAndAdminStatus();
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  const renderManagementComponent = () => {
+    switch (currentSection) {
+      case "hero-section":
+        return <HeroManagement />;
+      case "about-me":
+        return <AboutMeManagement />;
+      case "skills":
+        return <SkillsManagement />;
+      case "certificates":
+        return <CertificatesManagement />;
+      case "projects":
+        return <ProjectsManagement />;
+      case "contact-info":
+        return <ContactInfoManagement />;
+      case "resume":
+        return <ResumeManagement />;
+      case "messages":
+        return <ContactMessagesManagement />;
+      default:
+        return <HeroManagement />;
+    }
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <h1 className="text-4xl md:text-6xl font-extrabold mb-12 text-center text-foreground drop-shadow-lg">
-        Dashboard <span className="text-primary">Overview</span>
-      </h1>
+    <AdminLayout currentSection={currentSection} onSectionChange={setCurrentSection}>
+      <div className="w-full max-w-4xl mx-auto p-4">
+        <h1 className="text-4xl md:text-6xl font-extrabold mb-12 text-center text-foreground drop-shadow-lg">
+          Dashboard <span className="text-primary">Overview</span>
+        </h1>
 
-      <div className="flex justify-center mb-8">
-        <AuthForm />
+        <div className="flex justify-center mb-8">
+          <AuthForm />
+        </div>
+
+        {loadingAdminCheck ? (
+          <Card className="bg-card shadow-lg border border-border/50 mt-8">
+            <CardContent className="text-muted-foreground p-6 text-center">
+              Loading admin status...
+            </CardContent>
+          </Card>
+        ) : session && isAdmin ? (
+          <Card className="bg-card shadow-lg border border-border/50 mt-8">
+            <CardContent className="p-6">
+              {renderManagementComponent()}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-card shadow-lg border border-border/50 mt-8">
+            <CardContent className="text-muted-foreground p-6 text-center">
+              Please log in with an administrator account to access the content management features.
+            </CardContent>
+          </Card>
+        )}
       </div>
-
-      {loadingAdminCheck ? (
-        <Card className="bg-card shadow-lg border border-border/50 mt-8">
-          <CardContent className="text-muted-foreground p-6 text-center">
-            Loading admin status...
-          </CardContent>
-        </Card>
-      ) : session && isAdmin ? (
-        <Tabs defaultValue="hero-section" className="w-full mt-8">
-          <TabsList className="grid w-full grid-cols-7"> {/* Reverted to 7 columns */}
-            <TabsTrigger value="hero-section">Hero</TabsTrigger>
-            <TabsTrigger value="about-me">About Me</TabsTrigger>
-            <TabsTrigger value="skills">Skills</TabsTrigger>
-            <TabsTrigger value="certificates">Certificates</TabsTrigger>
-            <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="contact-info">Contact Info</TabsTrigger>
-            <TabsTrigger value="messages">Messages</TabsTrigger>
-          </TabsList>
-          <TabsContent value="hero-section">
-            <Card className="bg-card shadow-lg border border-border/50">
-              <CardContent className="p-6">
-                <HeroManagement />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="about-me">
-            <Card className="bg-card shadow-lg border border-border/50">
-              <CardContent className="p-6">
-                <AboutMeManagement />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="skills">
-            <Card className="bg-card shadow-lg border border-border/50">
-              <CardContent className="p-6">
-                <SkillsManagement />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="certificates">
-            <Card className="bg-card shadow-lg border border-border/50">
-              <CardContent className="p-6">
-                <CertificatesManagement />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="projects">
-            <Card className="bg-card shadow-lg border border-border/50">
-              <CardContent className="p-6">
-                <ProjectsManagement />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="contact-info">
-            <Card className="bg-card shadow-lg border border-border/50">
-              <CardContent className="p-6">
-                <ContactInfoManagement />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="messages">
-            <Card className="bg-card shadow-lg border border-border/50">
-              <CardContent className="p-6">
-                <ContactMessagesManagement />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <Card className="bg-card shadow-lg border border-border/50 mt-8">
-          <CardContent className="text-muted-foreground p-6 text-center">
-            Please log in with an administrator account to access the content management features.
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    </AdminLayout>
   );
 };
 
