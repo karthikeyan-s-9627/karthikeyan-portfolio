@@ -5,13 +5,13 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User, Linkedin, Twitter, Instagram, Send } from "lucide-react";
+import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User, Linkedin, Twitter, Instagram, Send, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import CertificatesCarousel from "@/components/CertificatesCarousel";
-import ProjectsSlider from "@/components/ProjectsSlider"; // Corrected import path
+import ProjectsSlider from "@/components/ProjectsSlider";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 
@@ -41,6 +41,15 @@ interface Project {
   live_link?: string;
   image?: string;
 }
+
+interface AboutMeContent {
+  id: string;
+  content: string;
+  image_url?: string;
+  updated_at: string;
+}
+
+const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001"; // Matches the default ID in SQL
 
 const Home = () => {
   const [contactName, setContactName] = React.useState("");
@@ -163,6 +172,31 @@ const Home = () => {
     },
   });
 
+  // Fetch About Me content from Supabase
+  const { data: aboutMe, isLoading: isLoadingAboutMe, error: aboutMeError } = useQuery<AboutMeContent, Error>({
+    queryKey: ["about_me"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("about_me")
+        .select("*")
+        .eq("id", ABOUT_ME_SINGLETON_ID)
+        .single();
+      if (error) {
+        // If no record exists, return a default empty structure
+        if (error.code === 'PGRST116') {
+          return {
+            id: ABOUT_ME_SINGLETON_ID,
+            content: "Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.\n\nMy academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.\n\nOutside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.",
+            image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image",
+            updated_at: new Date().toISOString(),
+          };
+        }
+        throw error;
+      }
+      return data;
+    },
+  });
+
   // Group skills by category for display
   const groupedSkills = React.useMemo(() => {
     if (!skills) return {};
@@ -258,44 +292,46 @@ const Home = () => {
           About <span className="text-primary">Me</span>
         </motion.h1>
 
-        <motion.div
-          className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-        >
-          <motion.div variants={cardVariants}>
-            <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
-              hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
-            >
-              <CardHeader className="p-6 pb-4">
-                <CardTitle className="text-2xl font-bold text-primary mb-2 flex items-center gap-2">
-                  <User className="h-6 w-6" /> My Journey So Far
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-0 text-lg text-muted-foreground leading-relaxed">
-                <p className="mb-4">
-                  Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.
-                </p>
-                <p className="mb-4">
-                  My academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.
-                </p>
-                <p>
-                  Outside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.
-                </p>
-              </CardContent>
-            </Card>
+        {isLoadingAboutMe ? (
+          <div className="text-center text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-5 w-5 animate-spin" /> Loading About Me content...</div>
+        ) : aboutMeError ? (
+          <div className="text-center text-destructive">Error loading About Me content: {aboutMeError.message}</div>
+        ) : (
+          <motion.div
+            className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            <motion.div variants={cardVariants}>
+              <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
+              >
+                <CardHeader className="p-6 pb-4">
+                  <CardTitle className="text-2xl font-bold text-primary mb-2 flex items-center gap-2">
+                    <User className="h-6 w-6" /> My Journey So Far
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 pt-0 text-lg text-muted-foreground leading-relaxed">
+                  {aboutMe?.content.split('\n').map((paragraph, index) => (
+                    <p key={index} className="mb-4 last:mb-0">{paragraph}</p>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div variants={cardVariants} className="hidden md:flex items-center justify-center">
+              {aboutMe?.image_url && (
+                <img
+                  src={aboutMe.image_url}
+                  alt="About John Doe"
+                  className="w-full max-w-sm rounded-lg object-cover shadow-2xl border-4 border-primary/50
+                    hover:scale-105 transition-transform duration-500 ease-in-out"
+                />
+              )}
+            </motion.div>
           </motion.div>
-          <motion.div variants={cardVariants} className="hidden md:flex items-center justify-center">
-            <img
-              src="https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image" // Placeholder image for About section
-              alt="About John Doe"
-              className="w-full max-w-sm rounded-lg object-cover shadow-2xl border-4 border-primary/50
-                hover:scale-105 transition-transform duration-500 ease-in-out"
-            />
-          </motion.div>
-        </motion.div>
+        )}
       </section>
 
       {/* Skills Section */}

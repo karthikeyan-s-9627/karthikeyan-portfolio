@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SkillsManagement from "@/components/admin/SkillsManagement";
 import CertificatesManagement from "@/components/admin/CertificatesManagement";
 import ProjectsManagement from "@/components/admin/ProjectsManagement";
-import ContactMessagesManagement from "@/components/admin/ContactMessagesManagement"; // Import new component
+import ContactMessagesManagement from "@/components/admin/ContactMessagesManagement";
+import AboutMeManagement from "@/components/admin/AboutMeManagement"; // Import new component
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
@@ -74,13 +75,21 @@ const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
       ) : session && isAdmin ? (
-        <Tabs defaultValue="skills" className="w-full mt-8">
-          <TabsList className="grid w-full grid-cols-4"> {/* Changed to 4 columns */}
+        <Tabs defaultValue="about-me" className="w-full mt-8"> {/* Changed default value */}
+          <TabsList className="grid w-full grid-cols-5"> {/* Changed to 5 columns */}
+            <TabsTrigger value="about-me">About Me</TabsTrigger> {/* New tab */}
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="certificates">Certificates</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="messages">Messages</TabsTrigger> {/* New tab */}
+            <TabsTrigger value="messages">Messages</TabsTrigger>
           </TabsList>
+          <TabsContent value="about-me"> {/* New tab content */}
+            <Card className="bg-card shadow-lg border border-border/50">
+              <CardContent className="p-6">
+                <AboutMeManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
           <TabsContent value="skills">
             <Card className="bg-card shadow-lg border border-border/50">
               <CardContent className="p-6">
@@ -102,7 +111,7 @@ const AdminDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="messages"> {/* New tab content */}
+          <TabsContent value="messages">
             <Card className="bg-card shadow-lg border border-border/50">
               <CardContent className="p-6">
                 <ContactMessagesManagement />
