@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } = from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -127,11 +127,10 @@ const Home = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 50, rotateX: 90, transformOrigin: "bottom" },
+    hidden: { opacity: 0, y: 50 }, // Removed rotateX
     visible: {
       opacity: 1,
       y: 0,
-      rotateX: 0,
       transition: {
         type: "spring",
         stiffness: 100,
@@ -141,11 +140,10 @@ const Home = () => {
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, scale: 0.8, rotateY: 45 },
+    hidden: { opacity: 0, scale: 0.8 }, // Removed rotateY
     visible: {
       opacity: 1,
       scale: 1,
-      rotateY: 0,
       transition: {
         type: "spring",
         stiffness: 100,
@@ -244,7 +242,7 @@ const Home = () => {
           <motion.div variants={cardVariants}>
             <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
               hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
-              hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
+              transform-gpu"
             >
               <CardHeader className="p-6 pb-4">
                 <CardTitle className="text-2xl font-bold text-primary mb-2 flex items-center gap-2">
@@ -302,7 +300,7 @@ const Home = () => {
               >
                 <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
                   hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
-                  hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+                  transform-gpu"
                 >
                   <CardHeader className="p-6 pb-4 flex flex-row items-center gap-3">
                     {IconComponent && <IconComponent className="h-6 w-6 text-primary" />}
@@ -353,7 +351,7 @@ const Home = () => {
             >
               <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
                 hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
-                hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+                transform-gpu"
               >
                 <CardHeader className="p-0">
                   <img src={cert.image} alt={cert.title} className="w-full h-40 object-cover rounded-t-xl border-b border-border/50" />
@@ -407,7 +405,7 @@ const Home = () => {
             >
               <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
                 hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
-                hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+                transform-gpu"
               >
                 <CardHeader className="p-0">
                   <img src={project.image} alt={project.title} className="w-full h-48 object-cover rounded-t-xl border-b border-border/50" />
@@ -459,25 +457,25 @@ const Home = () => {
           Get in <span className="text-primary">Touch</span>
         </motion.h1>
 
-        <motion.div
-          className="w-full max-w-5xl perspective-1000"
-          variants={cardVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-        >
-          <Card className="bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-            hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
-            hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl">
+          <motion.div
+            className="perspective-1000"
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
           >
-            <CardHeader className="p-6 pb-4">
-              <CardTitle className="text-2xl font-bold text-primary mb-2">Connect with Me</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                I'm always open to new opportunities and collaborations.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 pt-0 grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-4 text-lg text-muted-foreground">
+            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
+              transform-gpu"
+            >
+              <CardHeader className="p-6 pb-4">
+                <CardTitle className="text-2xl font-bold text-primary mb-2">Contact Information</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Feel free to reach out through any of these channels.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-4 text-lg text-muted-foreground">
                 <motion.div variants={itemVariants} className="flex items-center gap-3">
                   <Mail className="h-6 w-6 text-primary" />
                   <span>johndoe@example.com</span>
@@ -490,33 +488,51 @@ const Home = () => {
                   <MapPin className="h-6 w-6 text-primary" />
                   <span>Anytown, USA</span>
                 </motion.div>
-                <motion.div variants={itemVariants} className="flex items-center gap-3">
-                  <Github className="h-6 w-6 text-primary" />
-                  <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">github.com/johndoe</a>
-                </motion.div>
-              </div>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <motion.div variants={itemVariants}>
-                  <Label htmlFor="name" className="text-foreground">Name</Label>
-                  <Input id="name" placeholder="Your Name" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                </motion.div>
-                <motion.div variants={itemVariants}>
-                  <Label htmlFor="email" className="text-foreground">Email</Label>
-                  <Input id="email" type="email" placeholder="your@email.com" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                </motion.div>
-                <motion.div variants={itemVariants}>
-                  <Label htmlFor="message" className="text-foreground">Message</Label>
-                  <Textarea id="message" placeholder="Your message..." rows={5} className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                </motion.div>
-                <motion.div variants={itemVariants}>
-                  <Button type="submit" className="w-full glow-button">
-                    Send Message
-                  </Button>
-                </motion.div>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            className="perspective-1000"
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
+              transform-gpu"
+            >
+              <CardHeader className="p-6 pb-4">
+                <CardTitle className="text-2xl font-bold text-primary mb-2">Send a Message</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  I'll get back to you as soon as possible.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <motion.div variants={itemVariants}>
+                    <Label htmlFor="name" className="text-foreground">Name</Label>
+                    <Input id="name" placeholder="Your Name" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <Label htmlFor="email" className="text-foreground">Email</Label>
+                    <Input id="email" type="email" placeholder="your@email.com" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <Label htmlFor="message" className="text-foreground">Message</Label>
+                    <Textarea id="message" placeholder="Your message..." rows={5} className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <Button type="submit" className="w-full glow-button">
+                      Send Message
+                    </Button>
+                  </motion.div>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </section>
     </div>
   );

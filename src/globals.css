@@ -111,7 +111,7 @@
     linear-gradient(to right, hsl(var(--border)/0.1) 1px, transparent 1px),
     linear-gradient(to bottom, hsl(var(--border)/0.1) 1px, transparent 1px);
   background-size: 40px 40px; /* Size of the grid cells */
-  animation: background-pan 60s linear infinite;
+  animation: background-pan 30s linear infinite; /* Reduced duration for less extreme pan */
   opacity: 0.3; /* Subtle opacity */
 }
 
@@ -120,7 +120,7 @@
     background-position: 0 0;
   }
   to {
-    background-position: -4000px -4000px; /* Pan over a large area */
+    background-position: -400px -400px; /* Reduced pan distance */
   }
 }
 
@@ -157,22 +157,22 @@
   perspective: 1000px;
 }
 
-/* 3D rotation on hover */
-.hover\\:rotate-x-3:hover {
+/* 3D rotation on hover - REMOVED FOR PERFORMANCE */
+/* .hover\:rotate-x-3:hover {
   transform: rotateX(3deg);
 }
 
-.hover\\:rotate-y-3:hover {
+.hover\:rotate-y-3:hover {
   transform: rotateY(3deg);
 }
 
-.hover\\:rotate-x-2:hover {
+.hover\:rotate-x-2:hover {
   transform: rotateX(2deg);
 }
 
-.hover\\:rotate-y-2:hover {
+.hover\:rotate-y-2:hover {
   transform: rotateY(2deg);
-}
+} */
 
 /* Glowing buttons */
 .glow-button {
