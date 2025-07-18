@@ -57,7 +57,22 @@ interface Profile {
   hero_image_url?: string;
 }
 
+interface ContactInfo {
+  id: string;
+  email: string;
+  phone?: string;
+  location?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  twitter_url?: string;
+  instagram_url?: string;
+  whatsapp_url?: string;
+  telegram_url?: string;
+  updated_at: string;
+}
+
 const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001"; // Matches the default ID in SQL
+const CONTACT_INFO_SINGLETON_ID = "00000000-0000-0000-0000-000000000002"; // Matches the default ID in SQL
 
 const Home = () => {
   const [contactName, setContactName] = React.useState("");
@@ -232,6 +247,37 @@ const Home = () => {
         throw usersError;
       }
       return usersData;
+    },
+  });
+
+  // Fetch Contact Info from Supabase
+  const { data: contactInfo, isLoading: isLoadingContactInfo, error: contactInfoError } = useQuery<ContactInfo, Error>({
+    queryKey: ["contact_info"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contact_info")
+        .select("*")
+        .eq("id", CONTACT_INFO_SINGLETON_ID)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return {
+            id: CONTACT_INFO_SINGLETON_ID,
+            email: "johndoe@example.com",
+            phone: "+1 (123) 456-7890",
+            location: "Anytown, USA",
+            linkedin_url: "#",
+            github_url: "#",
+            twitter_url: "#",
+            instagram_url: "#",
+            whatsapp_url: "#",
+            telegram_url: "#",
+            updated_at: new Date().toISOString(),
+          };
+        }
+        throw error;
+      }
+      return data;
     },
   });
 
@@ -510,42 +556,68 @@ const Home = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-4 text-lg text-muted-foreground">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-6 w-6 text-primary" />
-                  <a href="mailto:johndoe@example.com" className="hover:text-primary transition-colors">johndoe@example.com</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-6 w-6 text-primary" />
-                  <a href="tel:+11234567890" className="hover:text-primary transition-colors">+1 (123) 456-7890</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-6 w-6 text-primary" />
-                  <a href="https://www.google.com/maps/search/?api=1&query=Anytown,USA" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Anytown, USA</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Linkedin className="h-6 w-6 text-primary" />
-                  <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">linkedin.com/in/johndoe</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Github className="h-6 w-6 text-primary" />
-                  <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">github.com/johndoe</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Twitter className="h-6 w-6 text-primary" />
-                  <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">twitter.com/johndoe</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Instagram className="h-6 w-6 text-primary" />
-                  <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">instagram.com/johndoe</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-6 w-6 text-primary" />
-                  <a href="https://wa.me/11234567890" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">WhatsApp</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Send className="h-6 w-6 text-primary" />
-                  <a href="https://t.me/johndoe" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Telegram</a>
-                </div>
+                {isLoadingContactInfo ? (
+                  <div className="flex items-center gap-2"><Loader2 className="h-5 w-5 animate-spin" /> Loading contact info...</div>
+                ) : contactInfoError ? (
+                  <div className="text-destructive">Error loading contact info: {contactInfoError.message}</div>
+                ) : (
+                  <>
+                    {contactInfo?.email && (
+                      <div className="flex items-center gap-3">
+                        <Mail className="h-6 w-6 text-primary" />
+                        <a href={`mailto:${contactInfo.email}`} className="hover:text-primary transition-colors">{contactInfo.email}</a>
+                      </div>
+                    )}
+                    {contactInfo?.phone && (
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-6 w-6 text-primary" />
+                        <a href={`tel:${contactInfo.phone}`} className="hover:text-primary transition-colors">{contactInfo.phone}</a>
+                      </div>
+                    )}
+                    {contactInfo?.location && (
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-6 w-6 text-primary" />
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contactInfo.location)}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">{contactInfo.location}</a>
+                      </div>
+                    )}
+                    {contactInfo?.linkedin_url && (
+                      <div className="flex items-center gap-3">
+                        <Linkedin className="h-6 w-6 text-primary" />
+                        <a href={contactInfo.linkedin_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">LinkedIn</a>
+                      </div>
+                    )}
+                    {contactInfo?.github_url && (
+                      <div className="flex items-center gap-3">
+                        <Github className="h-6 w-6 text-primary" />
+                        <a href={contactInfo.github_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a>
+                      </div>
+                    )}
+                    {contactInfo?.twitter_url && (
+                      <div className="flex items-center gap-3">
+                        <Twitter className="h-6 w-6 text-primary" />
+                        <a href={contactInfo.twitter_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Twitter</a>
+                      </div>
+                    )}
+                    {contactInfo?.instagram_url && (
+                      <div className="flex items-center gap-3">
+                        <Instagram className="h-6 w-6 text-primary" />
+                        <a href={contactInfo.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a>
+                      </div>
+                    )}
+                    {contactInfo?.whatsapp_url && (
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-6 w-6 text-primary" /> {/* Reusing Phone icon for WhatsApp */}
+                        <a href={contactInfo.whatsapp_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">WhatsApp</a>
+                      </div>
+                    )}
+                    {contactInfo?.telegram_url && (
+                      <div className="flex items-center gap-3">
+                        <Send className="h-6 w-6 text-primary" /> {/* Reusing Send icon for Telegram */}
+                        <a href={contactInfo.telegram_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Telegram</a>
+                      </div>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
           </motion.div>

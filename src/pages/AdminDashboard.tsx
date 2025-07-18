@@ -11,7 +11,8 @@ import CertificatesManagement from "@/components/admin/CertificatesManagement";
 import ProjectsManagement from "@/components/admin/ProjectsManagement";
 import ContactMessagesManagement from "@/components/admin/ContactMessagesManagement";
 import AboutMeManagement from "@/components/admin/AboutMeManagement";
-import HeroManagement from "@/components/admin/HeroManagement"; // Import new component
+import HeroManagement from "@/components/admin/HeroManagement";
+import ContactInfoManagement from "@/components/admin/ContactInfoManagement"; // Import new component
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
@@ -76,16 +77,17 @@ const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
       ) : session && isAdmin ? (
-        <Tabs defaultValue="hero-section" className="w-full mt-8"> {/* Changed default value */}
-          <TabsList className="grid w-full grid-cols-6"> {/* Changed to 6 columns */}
-            <TabsTrigger value="hero-section">Hero</TabsTrigger> {/* New tab */}
+        <Tabs defaultValue="hero-section" className="w-full mt-8">
+          <TabsList className="grid w-full grid-cols-7"> {/* Changed to 7 columns */}
+            <TabsTrigger value="hero-section">Hero</TabsTrigger>
             <TabsTrigger value="about-me">About Me</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="certificates">Certificates</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
+            <TabsTrigger value="contact-info">Contact Info</TabsTrigger> {/* New tab */}
             <TabsTrigger value="messages">Messages</TabsTrigger>
           </TabsList>
-          <TabsContent value="hero-section"> {/* New tab content */}
+          <TabsContent value="hero-section">
             <Card className="bg-card shadow-lg border border-border/50">
               <CardContent className="p-6">
                 <HeroManagement />
@@ -117,6 +119,13 @@ const AdminDashboard: React.FC = () => {
             <Card className="bg-card shadow-lg border border-border/50">
               <CardContent className="p-6">
                 <ProjectsManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="contact-info"> {/* New tab content */}
+            <Card className="bg-card shadow-lg border border-border/50">
+              <CardContent className="p-6">
+                <ContactInfoManagement />
               </CardContent>
             </Card>
           </TabsContent>
