@@ -99,3 +99,60 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom CSS for 3D-like effects and animations */
+
+/* Background gradient animation */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-shift {
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Perspective for 3D transforms */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* 3D rotation on hover */
+.hover\\:rotate-x-3:hover {
+  transform: rotateX(3deg);
+}
+
+.hover\\:rotate-y-3:hover {
+  transform: rotateY(3deg);
+}
+
+.hover\\:rotate-x-2:hover {
+  transform: rotateX(2deg);
+}
+
+.hover\\:rotate-y-2:hover {
+  transform: rotateY(2deg);
+}
+
+/* Glowing buttons */
+.glow-button {
+  box-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary), 0 0 15px var(--primary);
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.glow-button:hover {
+  box-shadow: 0 0 8px var(--primary), 0 0 15px var(--primary), 0 0 25px var(--primary);
+}
+
+.glow-button-outline {
+  box-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary);
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.glow-button-outline:hover {
+  box-shadow: 0 0 8px var(--primary), 0 0 15px var(--primary);
+}
+
+/* Glassmorphism effect (already handled by backdrop-blur-md and bg-card/70) */
