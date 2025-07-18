@@ -433,11 +433,11 @@ const Home = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="h-6 w-6 text-primary" />
-                  <span>+1 (123) 456-7890</span>
+                  <a href="tel:+11234567890" className="hover:text-primary transition-colors">+1 (123) 456-7890</a>
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin className="h-6 w-6 text-primary" />
-                  <span>Anytown, USA</span>
+                  <a href="https://www.google.com/maps/search/?api=1&query=Anytown,USA" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Anytown, USA</a>
                 </div>
                 <div className="flex items-center gap-3">
                   <Linkedin className="h-6 w-6 text-primary" />
