@@ -41,7 +41,7 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
   }, []);
 
   return (
-    <div className="relative w-full h-[500px]">
+    <div className="relative w-full h-[700px]"> {/* Increased height here */}
       <div className="carousel-slider">
         {certificates.map((cert, index) => (
           <div
