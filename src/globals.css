@@ -135,15 +135,29 @@
     0 0 40px hsl(var(--primary));
 }
 
-/* Custom CSS for 3D carousel */
-.perspective-1000 {
-  perspective: 1000px;
+/* Custom CSS for 3D carousel based on user's example */
+@keyframes carouselAutoRun {
+  from {
+    transform: perspective(1000px) rotateX(-16deg) rotateY(0deg);
+  }
+  to {
+    transform: perspective(1000px) rotateX(-16deg) rotateY(360deg);
+  }
 }
 
-.preserve-3d {
+.carousel-slider {
+  position: absolute;
+  width: 300px; /* Width of the cards */
+  height: 350px; /* Height of the cards */
+  top: 15%;
+  left: calc(50% - 150px); /* 50% minus half of the width */
   transform-style: preserve-3d;
+  transform: perspective(1000px); /* Set initial perspective */
+  animation: carouselAutoRun 25s linear infinite;
 }
 
-.backface-hidden {
-  backface-visibility: hidden;
+.carousel-item {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden; /* Hides the back of the card when it rotates away */
 }
