@@ -178,6 +178,20 @@ const Home = () => {
     },
   };
 
+  const skillCardVariants = {
+    hidden: { opacity: 0, rotateY: -180 },
+    visible: (i: number) => ({
+      opacity: 1,
+      rotateY: 0,
+      transition: {
+        type: "spring",
+        stiffness: 50,
+        damping: 15,
+        delay: i * 0.07,
+      },
+    }),
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Form submitted!");
@@ -309,20 +323,25 @@ const Home = () => {
           My <span className="text-primary">Skills</span>
         </motion.h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl [perspective:1200px]"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
           {Object.entries(skillsData).map(([category, data], index) => {
             const IconComponent = data.icon === "Database" ? Code : data.icon === "Tool" ? Briefcase : data.icon === "Brain" ? Lightbulb : data.icon; // Map string to Lucide icon
             return (
               <motion.div
                 key={category}
-                variants={cardVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.3 }}
+                variants={skillCardVariants}
                 custom={index}
+                whileHover={{ scale: 1.05, rotateY: 10, z: 40 }}
+                className="[transform-style:preserve-3d]"
               >
                 <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                  hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
+                  hover:shadow-primary/50 transition-shadow duration-300"
                 >
                   <CardHeader className="p-6 pb-4 flex flex-row items-center gap-3">
                     {IconComponent && <IconComponent className="h-6 w-6 text-primary" />}
@@ -345,7 +364,7 @@ const Home = () => {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </section>
 
       {/* Certificates Section */}
