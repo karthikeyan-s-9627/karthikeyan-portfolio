@@ -48,7 +48,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ currentSection, onSectionCh
                 "w-full justify-start text-lg font-medium transition-colors duration-200",
                 isActive
                   ? "bg-primary/10 text-primary hover:bg-primary/20"
-                  : "text-foreground hover:bg-muted/50"
+                  : "text-sidebar-foreground hover:bg-muted/50" // Changed from text-foreground
               )}
               onClick={() => handleItemClick(item.section)}
             >
