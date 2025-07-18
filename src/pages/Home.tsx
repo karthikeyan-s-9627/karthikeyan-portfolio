@@ -348,7 +348,7 @@ const Home = () => {
       </section>
 
       {/* Certificates Section */}
-      <section id="certificates" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
+      <section id="certificates" className="min-h-screen flex flex-col items-center justify-center p-4">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
           variants={sectionTitleVariants}
