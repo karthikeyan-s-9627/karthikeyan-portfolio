@@ -12,34 +12,11 @@ import { Label } from "@/components/ui/label";
 import { showSuccess } from "@/utils/toast";
 import CertificatesCarousel from "@/components/CertificatesCarousel";
 import ProjectsSlider from "@/components/ProjectsSlider";
+import { supabase } from "@/lib/supabase"; // Import supabase
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
 
 // Data for sections (moved from individual pages)
-const skillsData = {
-  "Programming Languages": {
-    icon: Code,
-    skills: ["TypeScript", "JavaScript", "Python", "Java", "C++"]
-  },
-  "Frontend Development": {
-    icon: Lightbulb,
-    skills: ["React", "Next.js", "HTML5", "CSS3", "Tailwind CSS", "Shadcn/UI", "Framer Motion"]
-  },
-  "Backend Development": {
-    icon: Briefcase,
-    skills: ["Node.js", "Express.js", "REST APIs", "GraphQL"]
-  },
-  "Databases": {
-    icon: "Database", // Placeholder for a database icon if needed
-    skills: ["PostgreSQL", "MongoDB", "MySQL", "Supabase"]
-  },
-  "Tools & Technologies": {
-    icon: "Tool", // Placeholder for a tool icon
-    skills: ["Git", "Docker", "VS Code", "Jira", "Figma"]
-  },
-  "Concepts": {
-    icon: "Brain", // Placeholder for a brain/concept icon
-    skills: ["Object-Oriented Programming", "Data Structures & Algorithms", "Responsive Design", "Agile Methodologies"]
-  },
-};
+// skillsData will now be fetched from Supabase
 
 const certificatesData = [
   {
@@ -198,6 +175,39 @@ const Home = () => {
     showSuccess("Your message has been sent!");
   };
 
+  // Fetch skills data from Supabase
+  const { data: skills, isLoading: isLoadingSkills, error: skillsError } = useQuery<Array<{ id: string; category: string; name: string }>, Error>({
+    queryKey: ["skills"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("skills").select("*").order("category").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Group skills by category for display
+  const groupedSkills = React.useMemo(() => {
+    if (!skills) return {};
+    return skills.reduce((acc, skill) => {
+      if (!acc[skill.category]) {
+        acc[skill.category] = [];
+      }
+      acc[skill.category].push(skill.name);
+      return acc;
+    }, {} as Record<string, string[]>);
+  }, [skills]);
+
+  // Map string icons to Lucide components
+  const skillCategoryIcons: Record<string, React.ElementType> = {
+    "Programming Languages": Code,
+    "Frontend Development": Lightbulb,
+    "Backend Development": Briefcase,
+    "Databases": Code, // Using Code for database, you can change this
+    "Tools & Technologies": Briefcase, // Using Briefcase for tools, you can change this
+    "Concepts": Lightbulb, // Using Lightbulb for concepts, you can change this
+  };
+
+
   return (
     <div className="space-y-24 lg:space-y-32">
       {/* Hero Section */}
@@ -323,48 +333,54 @@ const Home = () => {
           My <span className="text-primary">Skills</span>
         </motion.h1>
 
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl [perspective:1200px]"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          {Object.entries(skillsData).map(([category, data], index) => {
-            const IconComponent = data.icon === "Database" ? Code : data.icon === "Tool" ? Briefcase : data.icon === "Brain" ? Lightbulb : data.icon; // Map string to Lucide icon
-            return (
-              <motion.div
-                key={category}
-                variants={skillCardVariants}
-                custom={index}
-                whileHover={{ scale: 1.05, rotateY: 10, z: 40 }}
-                className="[transform-style:preserve-3d]"
-              >
-                <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                  hover:shadow-primary/50 transition-shadow duration-300"
+        {isLoadingSkills ? (
+          <div className="text-center text-muted-foreground">Loading skills...</div>
+        ) : skillsError ? (
+          <div className="text-center text-destructive">Error loading skills: {skillsError.message}</div>
+        ) : (
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl [perspective:1200px]"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            {Object.entries(groupedSkills).map(([category, skillsList], index) => {
+              const IconComponent = skillCategoryIcons[category] || Code; // Default to Code icon
+              return (
+                <motion.div
+                  key={category}
+                  variants={skillCardVariants}
+                  custom={index}
+                  whileHover={{ scale: 1.05, rotateY: 10, z: 40 }}
+                  className="[transform-style:preserve-3d]"
                 >
-                  <CardHeader className="p-6 pb-4 flex flex-row items-center gap-3">
-                    {IconComponent && <IconComponent className="h-6 w-6 text-primary" />}
-                    <CardTitle className="text-xl font-bold text-primary">{category}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 pt-0 flex flex-wrap gap-2">
-                    {data.skills.map((skill) => (
-                      <Badge
-                        key={skill}
-                        variant="secondary"
-                        className="px-3 py-1 text-sm rounded-full bg-secondary/80 text-secondary-foreground
-                          hover:bg-secondary/100 hover:scale-105 transition-transform duration-200
-                          shadow-md hover:shadow-lg border border-primary/20"
-                      >
-                        {skill}
-                      </Badge>
-                    ))}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                  <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                    hover:shadow-primary/50 transition-shadow duration-300"
+                  >
+                    <CardHeader className="p-6 pb-4 flex flex-row items-center gap-3">
+                      {IconComponent && <IconComponent className="h-6 w-6 text-primary" />}
+                      <CardTitle className="text-xl font-bold text-primary">{category}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 pt-0 flex flex-wrap gap-2">
+                      {skillsList.map((skill) => (
+                        <Badge
+                          key={skill}
+                          variant="secondary"
+                          className="px-3 py-1 text-sm rounded-full bg-secondary/80 text-secondary-foreground
+                            hover:bg-secondary/100 hover:scale-105 transition-transform duration-200
+                            shadow-md hover:shadow-lg border border-primary/20"
+                        >
+                          {skill}
+                        </Badge>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
       </section>
 
       {/* Certificates Section */}

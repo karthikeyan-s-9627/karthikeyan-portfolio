@@ -5,6 +5,8 @@ import AuthForm from "@/components/AuthForm";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { showError } from "@/utils/toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SkillsManagement from "@/components/admin/SkillsManagement"; // Import the new component
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
@@ -69,16 +71,40 @@ const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
       ) : session && isAdmin ? (
-        <Card className="bg-card shadow-lg border border-border/50 mt-8">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-primary">Content Management</CardTitle>
-          </CardHeader>
-          <CardContent className="text-muted-foreground">
-            <p>This is where you will manage your portfolio content.</p>
-            <p>You are logged in as an administrator. We can now proceed to build out the sections for managing skills, certificates, and projects.</p>
-            {/* Future content management links/components will go here */}
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="skills" className="w-full mt-8">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="skills">Skills</TabsTrigger>
+            <TabsTrigger value="certificates">Certificates</TabsTrigger>
+            <TabsTrigger value="projects">Projects</TabsTrigger>
+          </TabsList>
+          <TabsContent value="skills">
+            <Card className="bg-card shadow-lg border border-border/50">
+              <CardContent className="p-6">
+                <SkillsManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="certificates">
+            <Card className="bg-card shadow-lg border border-border/50">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-primary">Manage Certificates</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground">
+                <p>Certificate management coming soon!</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="projects">
+            <Card className="bg-card shadow-lg border border-border/50">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-primary">Manage Projects</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground">
+                <p>Project management coming soon!</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       ) : (
         <Card className="bg-card shadow-lg border border-border/50 mt-8">
           <CardContent className="text-muted-foreground p-6 text-center">
