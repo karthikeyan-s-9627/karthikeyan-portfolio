@@ -12,14 +12,14 @@ import ContactMessagesManagement from "@/components/admin/ContactMessagesManagem
 import AboutMeManagement from "@/components/admin/AboutMeManagement";
 import HeroManagement from "@/components/admin/HeroManagement";
 import ContactInfoManagement from "@/components/admin/ContactInfoManagement";
-import ResumeManagement from "@/components/admin/ResumeManagement"; // Ensure this is imported
-import AdminLayout from "@/components/layout/AdminLayout"; // Import AdminLayout
+import ResumeManagement from "@/components/admin/ResumeManagement";
+import AdminLayout from "@/components/layout/AdminLayout";
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [loadingAdminCheck, setLoadingAdminCheck] = React.useState(true);
-  const [currentSection, setCurrentSection] = React.useState("hero-section"); // State to manage current section
+  const [currentSection, setCurrentSection] = React.useState("hero-section");
 
   React.useEffect(() => {
     const checkSessionAndAdminStatus = async () => {
@@ -82,38 +82,52 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  return (
-    <AdminLayout currentSection={currentSection} onSectionChange={setCurrentSection}>
-      <div className="w-full max-w-4xl mx-auto p-4">
+  if (loadingAdminCheck) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground">
         <h1 className="text-4xl md:text-6xl font-extrabold mb-12 text-center text-foreground drop-shadow-lg">
           Dashboard <span className="text-primary">Overview</span>
         </h1>
+        <Card className="bg-card shadow-lg border border-border/50 mt-8 w-full max-w-md">
+          <CardContent className="text-muted-foreground p-6 text-center">
+            Loading admin status...
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-        <div className="flex justify-center mb-8">
-          <AuthForm />
-        </div>
-
-        {loadingAdminCheck ? (
-          <Card className="bg-card shadow-lg border border-border/50 mt-8">
-            <CardContent className="text-muted-foreground p-6 text-center">
-              Loading admin status...
-            </CardContent>
-          </Card>
-        ) : session && isAdmin ? (
+  if (session && isAdmin) {
+    return (
+      <AdminLayout currentSection={currentSection} onSectionChange={setCurrentSection}>
+        <div className="w-full max-w-4xl mx-auto p-4">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-12 text-center text-foreground drop-shadow-lg">
+            Dashboard <span className="text-primary">Overview</span>
+          </h1>
           <Card className="bg-card shadow-lg border border-border/50 mt-8">
             <CardContent className="p-6">
               {renderManagementComponent()}
             </CardContent>
           </Card>
-        ) : (
-          <Card className="bg-card shadow-lg border border-border/50 mt-8">
-            <CardContent className="text-muted-foreground p-6 text-center">
-              Please log in with an administrator account to access the content management features.
-            </CardContent>
-          </Card>
-        )}
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground">
+      <h1 className="text-4xl md:text-6xl font-extrabold mb-12 text-center text-foreground drop-shadow-lg">
+        Dashboard <span className="text-primary">Overview</span>
+      </h1>
+      <div className="flex justify-center mb-8">
+        <AuthForm />
       </div>
-    </AdminLayout>
+      <Card className="bg-card shadow-lg border border-border/50 mt-8 w-full max-w-md">
+        <CardContent className="text-muted-foreground p-6 text-center">
+          Please log in with an administrator account to access the content management features.
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
