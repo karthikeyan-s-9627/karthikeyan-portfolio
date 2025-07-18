@@ -43,17 +43,20 @@ const ResumeManagement: React.FC = () => {
           return {
             id: RESUME_SINGLETON_ID,
             ...DEFAULT_RESUME,
-            updated_at: new Date().toISOString(), // Add updated_at for type consistency
+            updated_at: new Date().toISOString(),
           };
         }
         throw error;
       }
       return data;
     },
-    onSuccess: (data) => {
-      setResumeTitle(data.title ?? DEFAULT_RESUME.title);
-    },
   });
+
+  React.useEffect(() => {
+    if (resume) {
+      setResumeTitle(resume.title ?? DEFAULT_RESUME.title);
+    }
+  }, [resume]);
 
   const upsertResumeMutation = useMutation<null, Error, Partial<Resume>, unknown>({
     mutationFn: async (resumeData) => {
@@ -76,19 +79,15 @@ const ResumeManagement: React.FC = () => {
   const uploadFileMutation = useMutation<string, Error, File, unknown>({
     mutationFn: async (file) => {
       const fileExtension = file.name.split('.').pop();
-      const fileName = `${RESUME_SINGLETON_ID}.${fileExtension}`; // Use singleton ID for consistent file name
-      const filePath = `resumes/${fileName}`;
-
-      // Upload file to Supabase storage
+      const fileName = `${RESUME_SINGLETON_ID}.${fileExtension}`;
       const { error: uploadError } = await supabase.storage
         .from("resumes")
         .upload(fileName, file, {
-          upsert: true, // Overwrite if file exists
+          upsert: true,
         });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: publicUrlData } = supabase.storage
         .from("resumes")
         .getPublicUrl(fileName);
@@ -97,7 +96,6 @@ const ResumeManagement: React.FC = () => {
         throw new Error("Failed to get public URL for the uploaded file.");
       }
 
-      // Update database with file path
       await upsertResumeMutation.mutateAsync({ file_path: publicUrlData.publicUrl });
 
       return publicUrlData.publicUrl;
@@ -106,7 +104,7 @@ const ResumeManagement: React.FC = () => {
       showSuccess("Resume file uploaded successfully!");
       setSelectedFile(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Clear the file input
+        fileInputRef.current.value = "";
       }
     },
     onError: (err) => {
@@ -125,7 +123,6 @@ const ResumeManagement: React.FC = () => {
 
       if (deleteError) throw deleteError;
 
-      // Clear file path in database
       await upsertResumeMutation.mutateAsync({ file_path: "" });
       return null;
     },

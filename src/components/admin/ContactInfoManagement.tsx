@@ -65,14 +65,17 @@ const ContactInfoManagement: React.FC = () => {
           return {
             id: CONTACT_INFO_SINGLETON_ID,
             ...DEFAULT_CONTACT_INFO,
-            updated_at: new Date().toISOString(), // Add updated_at for type consistency
+            updated_at: new Date().toISOString(),
           };
         }
         throw error;
       }
       return data;
     },
-    onSuccess: (data) => {
+  });
+
+  React.useEffect(() => {
+    if (data) {
       setContactInfo({
         email: data.email ?? DEFAULT_CONTACT_INFO.email,
         phone: data.phone ?? DEFAULT_CONTACT_INFO.phone,
@@ -84,8 +87,8 @@ const ContactInfoManagement: React.FC = () => {
         whatsapp_url: data.whatsapp_url ?? DEFAULT_CONTACT_INFO.whatsapp_url,
         telegram_url: data.telegram_url ?? DEFAULT_CONTACT_INFO.telegram_url,
       });
-    },
-  });
+    }
+  }, [data]);
 
   const upsertContactInfoMutation = useMutation<null, Error, Omit<ContactInfo, "updated_at">, unknown>({
     mutationFn: async (infoData) => {

@@ -64,21 +64,24 @@ const HeroManagement: React.FC = () => {
       }
       return data;
     },
-    enabled: !!userId, // Only run query if userId is available
-    onSuccess: (data) => {
-      setFirstName(data.first_name ?? DEFAULT_HERO_PROFILE.first_name);
-      setLastName(data.last_name ?? DEFAULT_HERO_PROFILE.last_name);
-      setTagline(data.tagline ?? DEFAULT_HERO_PROFILE.tagline);
-      setHeroImageUrl(data.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url);
-    },
+    enabled: !!userId,
   });
+
+  React.useEffect(() => {
+    if (profile) {
+      setFirstName(profile.first_name ?? DEFAULT_HERO_PROFILE.first_name);
+      setLastName(profile.last_name ?? DEFAULT_HERO_PROFILE.last_name);
+      setTagline(profile.tagline ?? DEFAULT_HERO_PROFILE.tagline);
+      setHeroImageUrl(profile.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url);
+    }
+  }, [profile]);
 
   const updateProfileMutation = useMutation<null, Error, Partial<Profile>, unknown>({
     mutationFn: async (profileData) => {
       if (!userId) throw new Error("User ID not available for update.");
       const { error } = await supabase
         .from("profiles")
-        .upsert({ id: userId, ...profileData }) // Use upsert to create if not exists
+        .upsert({ id: userId, ...profileData })
         .eq("id", userId);
       if (error) throw error;
       return null;

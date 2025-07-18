@@ -39,30 +39,32 @@ const AboutMeManagement: React.FC = () => {
         .eq("id", ABOUT_ME_SINGLETON_ID)
         .single();
       if (error) {
-        // If no record exists, return a default structure
         if (error.code === 'PGRST116') { // No rows found
           return {
             id: ABOUT_ME_SINGLETON_ID,
             ...DEFAULT_ABOUT_ME_CONTENT,
-            updated_at: new Date().toISOString(), // Add updated_at for type consistency
+            updated_at: new Date().toISOString(),
           };
         }
         throw error;
       }
       return data;
     },
-    onSuccess: (data) => {
+  });
+
+  React.useEffect(() => {
+    if (data) {
       setContent(data.content ?? DEFAULT_ABOUT_ME_CONTENT.content);
       setImageUrl(data.image_url ?? DEFAULT_ABOUT_ME_CONTENT.image_url);
-    },
-  });
+    }
+  }, [data]);
 
   const upsertAboutMeMutation = useMutation<null, Error, Omit<AboutMeContent, "updated_at">, unknown>({
     mutationFn: async (aboutMeData) => {
       const { error } = await supabase
         .from("about_me")
         .upsert({ id: ABOUT_ME_SINGLETON_ID, content: aboutMeData.content, image_url: aboutMeData.image_url })
-        .eq("id", ABOUT_ME_SINGLETON_ID); // Ensure we update the specific singleton row
+        .eq("id", ABOUT_ME_SINGLETON_ID);
       if (error) throw error;
       return null;
     },
