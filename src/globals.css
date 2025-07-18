@@ -176,7 +176,7 @@
 .continuous-scroll-content {
   display: flex;
   width: max-content;
-  animation: continuous-scroll 30s linear infinite;
+  animation: continuous-scroll 20s linear infinite;
 }
 
 .continuous-scroll-content:hover {
