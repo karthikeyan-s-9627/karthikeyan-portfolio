@@ -127,7 +127,7 @@ const Home = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 50 }, // Removed rotateX
+    hidden: { opacity: 0, y: 50 },
     visible: {
       opacity: 1,
       y: 0,
@@ -140,14 +140,14 @@ const Home = () => {
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, scale: 0.8 }, // Removed rotateY
+    hidden: { opacity: 0, scale: 0.9 },
     visible: {
       opacity: 1,
       scale: 1,
       transition: {
         type: "spring",
         stiffness: 100,
-        damping: 10,
+        damping: 12,
       },
     },
   };
@@ -190,32 +190,31 @@ const Home = () => {
             <a href="#projects">
               <Button className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
                 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300
-                hover:shadow-primary/70 hover:scale-105 glow-button">
+                hover:scale-105">
                 View Projects
               </Button>
             </a>
             <a href="#contact">
               <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
                 border-primary text-primary hover:bg-primary/10 transition-all duration-300
-                hover:shadow-primary/30 hover:scale-105 glow-button-outline">
+                hover:scale-105">
                 Get in Touch
               </Button>
             </a>
           </motion.div>
         </div>
         <motion.div
-          className="flex-1 flex justify-center lg:justify-end mt-12 lg:mt-0 perspective-1000"
-          initial={{ opacity: 0, scale: 0.8, rotateY: 45 }}
-          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          className="flex-1 flex justify-center lg:justify-end mt-12 lg:mt-0"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "spring", stiffness: 100, damping: 10, delay: 0.6 }}
         >
           <img
             src="https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image" // Placeholder image
             alt="John Doe"
             className="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full object-cover
-              shadow-2xl border-4 border-transparent
-              hover:scale-105 transition-transform duration-500 ease-in-out
-              glow-image" // Custom class for neon effect
+              shadow-2xl border-4 border-primary/30
+              hover:scale-105 transition-transform duration-500 ease-in-out"
           />
         </motion.div>
       </section>
@@ -233,16 +232,15 @@ const Home = () => {
         </motion.h1>
 
         <motion.div
-          className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8 perspective-1000"
+          className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
           <motion.div variants={cardVariants}>
-            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
-              transform-gpu"
+            <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
+              hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
             >
               <CardHeader className="p-6 pb-4">
                 <CardTitle className="text-2xl font-bold text-primary mb-2 flex items-center gap-2">
@@ -250,15 +248,15 @@ const Home = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0 text-lg text-muted-foreground leading-relaxed">
-                <motion.p variants={itemVariants} className="mb-4">
+                <p className="mb-4">
                   Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.
-                </motion.p>
-                <motion.p variants={itemVariants} className="mb-4">
+                </p>
+                <p className="mb-4">
                   My academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.
-                </motion.p>
-                <motion.p variants={itemVariants}>
+                </p>
+                <p>
                   Outside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.
-                </motion.p>
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -267,7 +265,7 @@ const Home = () => {
               src="https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image" // Placeholder image for About section
               alt="About John Doe"
               className="w-full max-w-sm rounded-lg object-cover shadow-2xl border-4 border-primary/50
-                hover:scale-105 transition-transform duration-500 ease-in-out glow-image"
+                hover:scale-105 transition-transform duration-500 ease-in-out"
             />
           </motion.div>
         </motion.div>
@@ -291,16 +289,14 @@ const Home = () => {
             return (
               <motion.div
                 key={category}
-                className="perspective-1000"
                 variants={cardVariants}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.3 }}
                 custom={index}
               >
-                <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                  hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
-                  transform-gpu"
+                <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                  hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
                 >
                   <CardHeader className="p-6 pb-4 flex flex-row items-center gap-3">
                     {IconComponent && <IconComponent className="h-6 w-6 text-primary" />}
@@ -342,16 +338,14 @@ const Home = () => {
           {certificatesData.map((cert, index) => (
             <motion.div
               key={index}
-              className="perspective-1000"
               variants={cardVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
               custom={index}
             >
-              <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
-                transform-gpu"
+              <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
               >
                 <CardHeader className="p-0">
                   <img src={cert.image} alt={cert.title} className="w-full h-40 object-cover rounded-t-xl border-b border-border/50" />
@@ -368,7 +362,7 @@ const Home = () => {
                   <p className="text-muted-foreground mb-4 text-sm">{cert.description}</p>
                   {cert.link && (
                     <a href={cert.link} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" className="w-full glow-button-outline">
+                      <Button variant="outline" className="w-full">
                         View Credential <ExternalLink className="ml-2 h-4 w-4" />
                       </Button>
                     </a>
@@ -396,16 +390,14 @@ const Home = () => {
           {projectsData.map((project, index) => (
             <motion.div
               key={index}
-              className="perspective-1000"
               variants={cardVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
               custom={index}
             >
-              <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
-                transform-gpu"
+              <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
               >
                 <CardHeader className="p-0">
                   <img src={project.image} alt={project.title} className="w-full h-48 object-cover rounded-t-xl border-b border-border/50" />
@@ -425,14 +417,14 @@ const Home = () => {
                   <div className="flex gap-3">
                     {project.githubLink && (
                       <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="flex-1">
-                        <Button variant="outline" className="w-full glow-button-outline">
+                        <Button variant="outline" className="w-full">
                           <Github className="mr-2 h-4 w-4" /> GitHub
                         </Button>
                       </a>
                     )}
                     {project.liveLink && (
                       <a href={project.liveLink} target="_blank" rel="noopener noreferrer" className="flex-1">
-                        <Button className="w-full glow-button">
+                        <Button className="w-full">
                           <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
                         </Button>
                       </a>
@@ -459,15 +451,13 @@ const Home = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl">
           <motion.div
-            className="perspective-1000"
             variants={cardVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
           >
-            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
-              transform-gpu"
+            <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
+              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-300"
             >
               <CardHeader className="p-6 pb-4">
                 <CardTitle className="text-2xl font-bold text-primary mb-2">Contact Information</CardTitle>
@@ -476,32 +466,30 @@ const Home = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-4 text-lg text-muted-foreground">
-                <motion.div variants={itemVariants} className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <Mail className="h-6 w-6 text-primary" />
                   <span>johndoe@example.com</span>
-                </motion.div>
-                <motion.div variants={itemVariants} className="flex items-center gap-3">
+                </div>
+                <div className="flex items-center gap-3">
                   <Phone className="h-6 w-6 text-primary" />
                   <span>+1 (123) 456-7890</span>
-                </motion.div>
-                <motion.div variants={itemVariants} className="flex items-center gap-3">
+                </div>
+                <div className="flex items-center gap-3">
                   <MapPin className="h-6 w-6 text-primary" />
                   <span>Anytown, USA</span>
-                </motion.div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
 
           <motion.div
-            className="perspective-1000"
             variants={cardVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
           >
-            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
-              transform-gpu"
+            <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
+              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-300"
             >
               <CardHeader className="p-6 pb-4">
                 <CardTitle className="text-2xl font-bold text-primary mb-2">Send a Message</CardTitle>
@@ -511,23 +499,23 @@ const Home = () => {
               </CardHeader>
               <CardContent className="p-6 pt-0">
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <motion.div variants={itemVariants}>
+                  <div>
                     <Label htmlFor="name" className="text-foreground">Name</Label>
                     <Input id="name" placeholder="Your Name" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                  </motion.div>
-                  <motion.div variants={itemVariants}>
+                  </div>
+                  <div>
                     <Label htmlFor="email" className="text-foreground">Email</Label>
                     <Input id="email" type="email" placeholder="your@email.com" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                  </motion.div>
-                  <motion.div variants={itemVariants}>
+                  </div>
+                  <div>
                     <Label htmlFor="message" className="text-foreground">Message</Label>
                     <Textarea id="message" placeholder="Your message..." rows={5} className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                  </motion.div>
-                  <motion.div variants={itemVariants}>
-                    <Button type="submit" className="w-full glow-button">
+                  </div>
+                  <div>
+                    <Button type="submit" className="w-full">
                       Send Message
                     </Button>
-                  </motion.div>
+                  </div>
                 </form>
               </CardContent>
             </Card>

@@ -111,17 +111,8 @@
     linear-gradient(to right, hsl(var(--border)/0.1) 1px, transparent 1px),
     linear-gradient(to bottom, hsl(var(--border)/0.1) 1px, transparent 1px);
   background-size: 40px 40px; /* Size of the grid cells */
-  animation: background-pan 30s linear infinite; /* Reduced duration for less extreme pan */
+  /* animation: background-pan 30s linear infinite; */ /* DISABLED FOR PERFORMANCE */
   opacity: 0.3; /* Subtle opacity */
-}
-
-@keyframes background-pan {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: -400px -400px; /* Reduced pan distance */
-  }
 }
 
 /* Add a radial gradient overlay for depth */
@@ -133,79 +124,5 @@
   height: 100%;
   z-index: -2; /* Even further back */
   background: radial-gradient(circle at center, hsl(var(--primary)/0.1) 0%, transparent 50%);
-  animation: radial-pulse 10s infinite alternate;
+  /* animation: radial-pulse 10s infinite alternate; */ /* DISABLED FOR PERFORMANCE */
 }
-
-@keyframes radial-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.2;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.3;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.2;
-  }
-}
-
-
-/* Perspective for 3D transforms */
-.perspective-1000 {
-  perspective: 1000px;
-}
-
-/* 3D rotation on hover - REMOVED FOR PERFORMANCE */
-/* .hover\:rotate-x-3:hover {
-  transform: rotateX(3deg);
-}
-
-.hover\:rotate-y-3:hover {
-  transform: rotateY(3deg);
-}
-
-.hover\:rotate-x-2:hover {
-  transform: rotateX(2deg);
-}
-
-.hover\:rotate-y-2:hover {
-  transform: rotateY(2deg);
-} */
-
-/* Glowing buttons */
-.glow-button {
-  box-shadow: 0 0 5px hsl(var(--primary)), 0 0 10px hsl(var(--primary)), 0 0 15px hsl(var(--primary));
-  transition: box-shadow 0.3s ease-in-out;
-}
-
-.glow-button:hover {
-  box-shadow: 0 0 8px hsl(var(--primary)), 0 0 15px hsl(var(--primary)), 0 0 25px hsl(var(--primary));
-}
-
-.glow-button-outline {
-  box-shadow: 0 0 5px hsl(var(--primary)), 0 0 10px hsl(var(--primary));
-  transition: box-shadow 0.3s ease-in-out;
-}
-
-.glow-button-outline:hover {
-  box-shadow: 0 0 8px hsl(var(--primary)), 0 0 15px hsl(var(--primary));
-}
-
-/* Neon glow for image */
-.glow-image {
-  box-shadow: 0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)), 0 0 30px hsl(var(--primary));
-  animation: pulse-glow 2s infinite alternate;
-}
-
-@keyframes pulse-glow {
-  0% {
-    box-shadow: 0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)), 0 0 30px hsl(var(--primary));
-  }
-  100% {
-    box-shadow: 0 0 15px hsl(var(--primary)), 0 0 25px hsl(var(--primary)), 0 0 40px hsl(var(--primary));
-  }
-}
-
-/* Glassmorphism effect (already handled by backdrop-blur-md and bg-card/70) */
