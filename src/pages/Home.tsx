@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import CertificatesCarousel from "@/components/CertificatesCarousel";
-import ProjectsSlider from "@/components/Projects/ProjectsSlider";
+import ProjectsSlider from "@/components/ProjectsSlider"; // Corrected import path
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 
