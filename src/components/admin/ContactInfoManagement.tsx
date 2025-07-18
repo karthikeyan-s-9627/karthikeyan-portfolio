@@ -26,6 +26,18 @@ interface ContactInfo {
 
 const CONTACT_INFO_SINGLETON_ID = "00000000-0000-0000-0000-000000000002"; // Matches the default ID in SQL
 
+const DEFAULT_CONTACT_INFO = {
+  email: "johndoe@example.com",
+  phone: "+1 (123) 456-7890",
+  location: "Anytown, USA",
+  linkedin_url: "#",
+  github_url: "#",
+  twitter_url: "#",
+  instagram_url: "#",
+  whatsapp_url: "#",
+  telegram_url: "#",
+};
+
 const ContactInfoManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [contactInfo, setContactInfo] = React.useState<Omit<ContactInfo, "id" | "updated_at">>({
@@ -52,16 +64,8 @@ const ContactInfoManagement: React.FC = () => {
         if (error.code === 'PGRST116') { // No rows found
           return {
             id: CONTACT_INFO_SINGLETON_ID,
-            email: "johndoe@example.com",
-            phone: "+1 (123) 456-7890",
-            location: "Anytown, USA",
-            linkedin_url: "#",
-            github_url: "#",
-            twitter_url: "#",
-            instagram_url: "#",
-            whatsapp_url: "#",
-            telegram_url: "#",
-            updated_at: new Date().toISOString(),
+            ...DEFAULT_CONTACT_INFO,
+            updated_at: new Date().toISOString(), // Add updated_at for type consistency
           };
         }
         throw error;
@@ -70,15 +74,15 @@ const ContactInfoManagement: React.FC = () => {
     },
     onSuccess: (data) => {
       setContactInfo({
-        email: data.email || "",
-        phone: data.phone || "",
-        location: data.location || "",
-        linkedin_url: data.linkedin_url || "",
-        github_url: data.github_url || "",
-        twitter_url: data.twitter_url || "",
-        instagram_url: data.instagram_url || "",
-        whatsapp_url: data.whatsapp_url || "",
-        telegram_url: data.telegram_url || "",
+        email: data.email ?? DEFAULT_CONTACT_INFO.email,
+        phone: data.phone ?? DEFAULT_CONTACT_INFO.phone,
+        location: data.location ?? DEFAULT_CONTACT_INFO.location,
+        linkedin_url: data.linkedin_url ?? DEFAULT_CONTACT_INFO.linkedin_url,
+        github_url: data.github_url ?? DEFAULT_CONTACT_INFO.github_url,
+        twitter_url: data.twitter_url ?? DEFAULT_CONTACT_INFO.twitter_url,
+        instagram_url: data.instagram_url ?? DEFAULT_CONTACT_INFO.instagram_url,
+        whatsapp_url: data.whatsapp_url ?? DEFAULT_CONTACT_INFO.whatsapp_url,
+        telegram_url: data.telegram_url ?? DEFAULT_CONTACT_INFO.telegram_url,
       });
     },
   });

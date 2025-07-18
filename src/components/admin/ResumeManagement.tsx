@@ -19,6 +19,11 @@ interface Resume {
 
 const RESUME_SINGLETON_ID = "00000000-0000-0000-0000-000000000003"; // Matches the default ID in SQL
 
+const DEFAULT_RESUME = {
+  title: "My Resume",
+  file_path: "",
+};
+
 const ResumeManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [resumeTitle, setResumeTitle] = React.useState("");
@@ -37,9 +42,8 @@ const ResumeManagement: React.FC = () => {
         if (error.code === 'PGRST116') { // No rows found
           return {
             id: RESUME_SINGLETON_ID,
-            title: "My Resume",
-            file_path: "", // No file uploaded yet
-            updated_at: new Date().toISOString(),
+            ...DEFAULT_RESUME,
+            updated_at: new Date().toISOString(), // Add updated_at for type consistency
           };
         }
         throw error;
@@ -47,7 +51,7 @@ const ResumeManagement: React.FC = () => {
       return data;
     },
     onSuccess: (data) => {
-      setResumeTitle(data.title || "My Resume");
+      setResumeTitle(data.title ?? DEFAULT_RESUME.title);
     },
   });
 

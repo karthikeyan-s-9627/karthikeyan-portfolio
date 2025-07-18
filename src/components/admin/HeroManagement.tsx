@@ -19,6 +19,13 @@ interface Profile {
   hero_image_url?: string;
 }
 
+const DEFAULT_HERO_PROFILE = {
+  first_name: "John",
+  last_name: "Doe",
+  tagline: "A passionate college student building innovative solutions and exploring the frontiers of technology.",
+  hero_image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image",
+};
+
 const HeroManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [firstName, setFirstName] = React.useState("");
@@ -50,10 +57,7 @@ const HeroManagement: React.FC = () => {
         if (error.code === 'PGRST116') { // No rows found
           return {
             id: userId,
-            first_name: "John",
-            last_name: "Doe",
-            tagline: "A passionate college student building innovative solutions and exploring the frontiers of technology.",
-            hero_image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image",
+            ...DEFAULT_HERO_PROFILE,
           };
         }
         throw error;
@@ -62,10 +66,10 @@ const HeroManagement: React.FC = () => {
     },
     enabled: !!userId, // Only run query if userId is available
     onSuccess: (data) => {
-      setFirstName(data.first_name || "");
-      setLastName(data.last_name || "");
-      setTagline(data.tagline || "");
-      setHeroImageUrl(data.hero_image_url || "");
+      setFirstName(data.first_name ?? DEFAULT_HERO_PROFILE.first_name);
+      setLastName(data.last_name ?? DEFAULT_HERO_PROFILE.last_name);
+      setTagline(data.tagline ?? DEFAULT_HERO_PROFILE.tagline);
+      setHeroImageUrl(data.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url);
     },
   });
 

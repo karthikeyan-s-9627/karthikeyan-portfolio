@@ -20,6 +20,11 @@ interface AboutMeContent {
 
 const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001"; // Matches the default ID in SQL
 
+const DEFAULT_ABOUT_ME_CONTENT = {
+  content: "Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.\n\nMy academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.\n\nOutside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.",
+  image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image",
+};
+
 const AboutMeManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [content, setContent] = React.useState("");
@@ -38,9 +43,8 @@ const AboutMeManagement: React.FC = () => {
         if (error.code === 'PGRST116') { // No rows found
           return {
             id: ABOUT_ME_SINGLETON_ID,
-            content: "Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.\n\nMy academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.\n\nOutside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.",
-            image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image",
-            updated_at: new Date().toISOString(),
+            ...DEFAULT_ABOUT_ME_CONTENT,
+            updated_at: new Date().toISOString(), // Add updated_at for type consistency
           };
         }
         throw error;
@@ -48,8 +52,8 @@ const AboutMeManagement: React.FC = () => {
       return data;
     },
     onSuccess: (data) => {
-      setContent(data.content || "");
-      setImageUrl(data.image_url || "");
+      setContent(data.content ?? DEFAULT_ABOUT_ME_CONTENT.content);
+      setImageUrl(data.image_url ?? DEFAULT_ABOUT_ME_CONTENT.image_url);
     },
   });
 
