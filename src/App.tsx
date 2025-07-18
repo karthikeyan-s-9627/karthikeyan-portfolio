@@ -4,8 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import MainLayout from "./components/layout/MainLayout";
-import AdminDashboard from "./pages/AdminDashboard"; // Import AdminDashboard
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // Import React Router components
+import AdminDashboard from "./pages/AdminDashboard";
+import Home from "./pages/Home"; // Import the Home component
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
