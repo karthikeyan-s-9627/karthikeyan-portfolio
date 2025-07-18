@@ -236,7 +236,7 @@ const Home = () => {
             </a>
             <a href="#contact">
               <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
-                border-primary text-primary hover:bg-primary/10 transition-all duration-300
+                border-primary text-primary hover:bg-primary/10 hover:text-foreground transition-all duration-300
                 hover:scale-105">
                 Get in Touch
               </Button>
