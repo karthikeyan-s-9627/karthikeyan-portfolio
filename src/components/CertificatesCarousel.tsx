@@ -26,7 +26,7 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
 
   const carouselVariants = {
     animate: {
-      rotateY: 360,
+      rotateY: 360, // Changed back to rotateY for horizontal revolution
       transition: {
         duration: 15, // Faster rotation speed
         ease: "linear",
@@ -61,7 +61,7 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
             key={index}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[350px] flex justify-center items-center backface-hidden"
             style={{
-              transform: `rotateY(${index * angle}deg) translateZ(${radius}px)`,
+              transform: `rotateY(${index * angle}deg) translateZ(${radius}px)`, // Changed back to rotateY
             }}
             variants={itemVariants}
             initial="hidden"
