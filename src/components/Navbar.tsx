@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { Menu } from "lucide-react";
@@ -9,8 +10,11 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+  const [tapCount, setTapCount] = React.useState(0);
+  const [lastTapTimestamp, setLastTapTimestamp] = React.useState(0);
 
   const navLinks = [
     { name: "Home", path: "#home" },
@@ -31,9 +35,27 @@ const Navbar = () => {
     }
   };
 
+  const handlePortfolioClick = () => {
+    const now = Date.now();
+    // If the last tap was more than 1 second ago, reset the count.
+    const newCount = now - lastTapTimestamp > 1000 ? 1 : tapCount + 1;
+
+    if (newCount >= 10) {
+      // If 10 taps are reached, navigate to admin and reset state.
+      navigate("/admin");
+      setTapCount(0);
+      setLastTapTimestamp(0);
+    } else {
+      // Otherwise, update state and scroll to the home section.
+      setTapCount(newCount);
+      setLastTapTimestamp(now);
+      scrollToSection("home");
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-background/80 shadow-lg py-4 px-4 sm:px-8 lg:px-16 flex justify-between items-center border-b border-border/50">
-      <div className="text-2xl font-bold text-primary cursor-pointer" onClick={() => scrollToSection("home")}>
+      <div className="text-2xl font-bold text-primary cursor-pointer" onClick={handlePortfolioClick}>
         My Portfolio
       </div>
 
@@ -48,7 +70,7 @@ const Navbar = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[250px] sm:w-[300px] bg-background/95 backdrop-blur-md border-l border-border/50 p-6 flex flex-col">
-              <div className="text-2xl font-bold text-primary mb-8 cursor-pointer" onClick={() => scrollToSection("home")}>
+              <div className="text-2xl font-bold text-primary mb-8 cursor-pointer" onClick={handlePortfolioClick}>
                 My Portfolio
               </div>
               <ul className="flex flex-col space-y-4">
