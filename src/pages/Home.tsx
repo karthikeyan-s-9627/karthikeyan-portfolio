@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { showSuccess } from "@/utils/toast";
+import CertificatesCarousel from "@/components/CertificatesCarousel"; // Import the new component
 
 // Data for sections (moved from individual pages)
 const skillsData = {
@@ -63,6 +64,30 @@ const certificatesData = [
     description: "Foundational understanding of AWS cloud concepts, services, security, architecture, pricing, and support.",
     link: "#", // Placeholder link
     image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+3",
+  },
+  {
+    title: "Data Science with Python",
+    issuer: "IBM",
+    date: "January 2024",
+    description: "Hands-on course covering data analysis, visualization, machine learning, and deep learning using Python.",
+    link: "#", // Placeholder link
+    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+4",
+  },
+  {
+    title: "Google Project Management",
+    issuer: "Google",
+    date: "March 2024",
+    description: "Professional certificate covering foundational project management skills, agile methodologies, and Scrum.",
+    link: "#", // Placeholder link
+    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+5",
+  },
+  {
+    title: "Cybersecurity Fundamentals",
+    issuer: "CompTIA",
+    date: "April 2024",
+    description: "Introduction to cybersecurity concepts, threats, vulnerabilities, and security controls.",
+    link: "#", // Placeholder link
+    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+6",
   },
 ];
 
@@ -334,44 +359,8 @@ const Home = () => {
           My <span className="text-primary">Certificates</span>
         </motion.h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-          {certificatesData.map((cert, index) => (
-            <motion.div
-              key={index}
-              variants={cardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.3 }}
-              custom={index}
-            >
-              <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300"
-              >
-                <CardHeader className="p-0">
-                  <img src={cert.image} alt={cert.title} className="w-full h-40 object-cover rounded-t-xl border-b border-border/50" />
-                  <div className="p-6 pb-4">
-                    <CardTitle className="text-xl font-bold text-primary mb-1 flex items-center gap-2">
-                      <Award className="h-5 w-5" /> {cert.title}
-                    </CardTitle>
-                    <CardDescription className="text-muted-foreground text-sm">
-                      {cert.issuer} | {cert.date}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <p className="text-muted-foreground mb-4 text-sm">{cert.description}</p>
-                  {cert.link && (
-                    <a href={cert.link} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" className="w-full">
-                        View Credential <ExternalLink className="ml-2 h-4 w-4" />
-                      </Button>
-                    </a>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        {/* Use the new CertificatesCarousel component */}
+        <CertificatesCarousel certificates={certificatesData} />
       </section>
 
       {/* Projects Section */}
