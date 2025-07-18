@@ -49,6 +49,14 @@ interface AboutMeContent {
   updated_at: string;
 }
 
+interface Profile {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  tagline?: string;
+  hero_image_url?: string;
+}
+
 const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001"; // Matches the default ID in SQL
 
 const Home = () => {
@@ -197,6 +205,37 @@ const Home = () => {
     },
   });
 
+  // Fetch Profile (for Hero Section) from Supabase
+  const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery<Profile, Error>({
+    queryKey: ["profile_hero"],
+    queryFn: async () => {
+      // Assuming the portfolio owner is the admin, we fetch their profile
+      // In a real app, you might have a specific 'portfolio_owner' profile or fetch by a known ID
+      const { data: usersData, error: usersError } = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name, tagline, hero_image_url")
+        .eq("is_admin", true) // Assuming the first admin user is the portfolio owner
+        .limit(1)
+        .single();
+
+      if (usersError) {
+        // If no admin profile found, provide default values
+        if (usersError.code === 'PGRST116') {
+          return {
+            id: "default",
+            first_name: "John",
+            last_name: "Doe",
+            tagline: "A passionate college student building innovative solutions and exploring the frontiers of technology.",
+            hero_image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image",
+          };
+        }
+        throw usersError;
+      }
+      return usersData;
+    },
+  });
+
+
   // Group skills by category for display
   const groupedSkills = React.useMemo(() => {
     if (!skills) return {};
@@ -230,7 +269,7 @@ const Home = () => {
             initial="hidden"
             animate="visible"
           >
-            Hi, I'm <span className="text-primary">John Doe</span>
+            Hi, I'm <span className="text-primary">{profile?.first_name || "John"} {profile?.last_name || "Doe"}</span>
           </motion.h1>
           <motion.p
             className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl"
@@ -239,7 +278,7 @@ const Home = () => {
             animate="visible"
             transition={{ delay: 0.2, ...itemVariants.visible.transition }}
           >
-            A passionate college student building innovative solutions and exploring the frontiers of technology.
+            {profile?.tagline || "A passionate college student building innovative solutions and exploring the frontiers of technology."}
           </motion.p>
 
           <motion.div
@@ -271,8 +310,8 @@ const Home = () => {
           transition={{ type: "spring", stiffness: 100, damping: 10, delay: 0.6 }}
         >
           <img
-            src="https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image" // Placeholder image
-            alt="John Doe"
+            src={profile?.hero_image_url || "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image"} // Placeholder image
+            alt={`${profile?.first_name || "John"} ${profile?.last_name || "Doe"}`}
             className="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full object-cover
               border-4 border-primary/30
               hover:scale-105 transition-transform duration-500 ease-in-out neon-shadow-primary"
