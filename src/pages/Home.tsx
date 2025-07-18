@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Github, Mail, Phone, MapPin } from "lucide-react";
+import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,30 @@ import { showSuccess } from "@/utils/toast";
 
 // Data for sections (moved from individual pages)
 const skillsData = {
-  "Programming Languages": ["TypeScript", "JavaScript", "Python", "Java", "C++"],
-  "Frontend Development": ["React", "Next.js", "HTML5", "CSS3", "Tailwind CSS", "Shadcn/UI", "Framer Motion"],
-  "Backend Development": ["Node.js", "Express.js", "REST APIs", "GraphQL"],
-  "Databases": ["PostgreSQL", "MongoDB", "MySQL", "Supabase"],
-  "Tools & Technologies": ["Git", "Docker", "VS Code", "Jira", "Figma"],
-  "Concepts": ["Object-Oriented Programming", "Data Structures & Algorithms", "Responsive Design", "Agile Methodologies"],
+  "Programming Languages": {
+    icon: Code,
+    skills: ["TypeScript", "JavaScript", "Python", "Java", "C++"]
+  },
+  "Frontend Development": {
+    icon: Lightbulb,
+    skills: ["React", "Next.js", "HTML5", "CSS3", "Tailwind CSS", "Shadcn/UI", "Framer Motion"]
+  },
+  "Backend Development": {
+    icon: Briefcase,
+    skills: ["Node.js", "Express.js", "REST APIs", "GraphQL"]
+  },
+  "Databases": {
+    icon: "Database", // Placeholder for a database icon if needed
+    skills: ["PostgreSQL", "MongoDB", "MySQL", "Supabase"]
+  },
+  "Tools & Technologies": {
+    icon: "Tool", // Placeholder for a tool icon
+    skills: ["Git", "Docker", "VS Code", "Jira", "Figma"]
+  },
+  "Concepts": {
+    icon: "Brain", // Placeholder for a brain/concept icon
+    skills: ["Object-Oriented Programming", "Data Structures & Algorithms", "Responsive Design", "Agile Methodologies"]
+  },
 };
 
 const certificatesData = [
@@ -28,6 +46,7 @@ const certificatesData = [
     date: "May 2023",
     description: "Comprehensive course covering MERN stack development, including React, Node.js, Express, and MongoDB.",
     link: "#", // Placeholder link
+    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+1",
   },
   {
     title: "Machine Learning Specialization",
@@ -35,6 +54,7 @@ const certificatesData = [
     date: "August 2023",
     description: "Specialization focused on supervised learning, unsupervised learning, and neural networks.",
     link: "#", // Placeholder link
+    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+2",
   },
   {
     title: "AWS Certified Cloud Practitioner",
@@ -42,6 +62,7 @@ const certificatesData = [
     date: "November 2023",
     description: "Foundational understanding of AWS cloud concepts, services, security, architecture, pricing, and support.",
     link: "#", // Placeholder link
+    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+3",
   },
 ];
 
@@ -52,6 +73,7 @@ const projectsData = [
     technologies: ["React", "Node.js", "Express", "MongoDB", "Stripe", "Tailwind CSS"],
     githubLink: "#", // Placeholder link
     liveLink: "#", // Placeholder link
+    image: "https://via.placeholder.com/400x250/1A202C/66FCF1?text=Project+1",
   },
   {
     title: "AI Chatbot Assistant",
@@ -59,6 +81,7 @@ const projectsData = [
     technologies: ["Python", "Flask", "OpenAI API", "React", "TypeScript"],
     githubLink: "#", // Placeholder link
     liveLink: "#", // Placeholder link
+    image: "https://via.placeholder.com/400x250/1A202C/66FCF1?text=Project+2",
   },
   {
     title: "Personal Blog Site",
@@ -66,6 +89,7 @@ const projectsData = [
     technologies: ["Next.js", "TypeScript", "Sanity.io", "GraphQL", "Tailwind CSS"],
     githubLink: "#", // Placeholder link
     liveLink: "#", // Placeholder link
+    image: "https://via.placeholder.com/400x250/1A202C/66FCF1?text=Project+3",
   },
   {
     title: "Task Management App",
@@ -73,16 +97,21 @@ const projectsData = [
     technologies: ["React", "Redux", "Firebase", "Chakra UI"],
     githubLink: "#", // Placeholder link
     liveLink: "#", // Placeholder link
+    image: "https://via.placeholder.com/400x250/1A202C/66FCF1?text=Project+4",
   },
 ];
 
 const Home = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
+  const sectionTitleVariants = {
+    hidden: { opacity: 0, y: -50 },
     visible: {
       opacity: 1,
+      y: 0,
       transition: {
-        staggerChildren: 0.1,
+        type: "spring",
+        stiffness: 100,
+        damping: 10,
+        delay: 0.1,
       },
     },
   };
@@ -187,7 +216,7 @@ const Home = () => {
       <section id="about" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
-          variants={itemVariants}
+          variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
@@ -196,31 +225,43 @@ const Home = () => {
         </motion.h1>
 
         <motion.div
-          className="w-full max-w-3xl perspective-1000"
-          variants={itemVariants}
+          className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8 perspective-1000"
+          variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
+          viewport={{ once: true, amount: 0.3 }}
         >
-          <Card className="bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-            hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
-            hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
-          >
-            <CardHeader className="p-6">
-              <CardTitle className="text-2xl font-bold text-primary mb-2">My Journey So Far</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0 text-lg text-muted-foreground leading-relaxed">
-              <motion.p variants={itemVariants} className="mb-4">
-                Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.
-              </motion.p>
-              <motion.p variants={itemVariants} className="mb-4">
-                My academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.
-              </motion.p>
-              <motion.p variants={itemVariants}>
-                Outside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.
-              </motion.p>
-            </CardContent>
-          </Card>
+          <motion.div variants={cardVariants}>
+            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
+              hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
+            >
+              <CardHeader className="p-6 pb-4">
+                <CardTitle className="text-2xl font-bold text-primary mb-2 flex items-center gap-2">
+                  <User className="h-6 w-6" /> My Journey So Far
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 text-lg text-muted-foreground leading-relaxed">
+                <motion.p variants={itemVariants} className="mb-4">
+                  Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.
+                </motion.p>
+                <motion.p variants={itemVariants} className="mb-4">
+                  My academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.
+                </motion.p>
+                <motion.p variants={itemVariants}>
+                  Outside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.
+                </motion.p>
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div variants={cardVariants} className="flex items-center justify-center">
+            <img
+              src="https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image" // Placeholder image for About section
+              alt="About John Doe"
+              className="w-full max-w-sm rounded-lg object-cover shadow-2xl border-4 border-primary/50
+                hover:scale-105 transition-transform duration-500 ease-in-out glow-image"
+            />
+          </motion.div>
         </motion.div>
       </section>
 
@@ -228,7 +269,7 @@ const Home = () => {
       <section id="skills" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
-          variants={itemVariants}
+          variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
@@ -237,39 +278,43 @@ const Home = () => {
         </motion.h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-          {Object.entries(skillsData).map(([category, skills], index) => (
-            <motion.div
-              key={category}
-              className="perspective-1000"
-              variants={cardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.3 }}
-              custom={index}
-            >
-              <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-                hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
-                hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+          {Object.entries(skillsData).map(([category, data], index) => {
+            const IconComponent = data.icon === "Database" ? Code : data.icon === "Tool" ? Briefcase : data.icon === "Brain" ? Lightbulb : data.icon; // Map string to Lucide icon
+            return (
+              <motion.div
+                key={category}
+                className="perspective-1000"
+                variants={cardVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                custom={index}
               >
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-bold text-primary">{category}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 pt-0 flex flex-wrap gap-2">
-                  {skills.map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant="secondary"
-                      className="px-3 py-1 text-sm rounded-full bg-secondary/80 text-secondary-foreground
-                        hover:bg-secondary/100 hover:scale-105 transition-transform duration-200
-                        shadow-md hover:shadow-lg"
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+                  hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
+                  hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
+                >
+                  <CardHeader className="p-6 pb-4 flex flex-row items-center gap-3">
+                    {IconComponent && <IconComponent className="h-6 w-6 text-primary" />}
+                    <CardTitle className="text-xl font-bold text-primary">{category}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 pt-0 flex flex-wrap gap-2">
+                    {data.skills.map((skill) => (
+                      <Badge
+                        key={skill}
+                        variant="secondary"
+                        className="px-3 py-1 text-sm rounded-full bg-secondary/80 text-secondary-foreground
+                          hover:bg-secondary/100 hover:scale-105 transition-transform duration-200
+                          shadow-md hover:shadow-lg border border-primary/20"
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
@@ -277,7 +322,7 @@ const Home = () => {
       <section id="certificates" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
-          variants={itemVariants}
+          variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
@@ -300,14 +345,19 @@ const Home = () => {
                 hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
                 hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
               >
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-bold text-primary mb-1">{cert.title}</CardTitle>
-                  <CardDescription className="text-muted-foreground text-sm">
-                    {cert.issuer} | {cert.date}
-                  </CardDescription>
+                <CardHeader className="p-0">
+                  <img src={cert.image} alt={cert.title} className="w-full h-40 object-cover rounded-t-xl border-b border-border/50" />
+                  <div className="p-6 pb-4">
+                    <CardTitle className="text-xl font-bold text-primary mb-1 flex items-center gap-2">
+                      <Award className="h-5 w-5" /> {cert.title}
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground text-sm">
+                      {cert.issuer} | {cert.date}
+                    </CardDescription>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
-                  <p className="text-muted-foreground mb-4">{cert.description}</p>
+                  <p className="text-muted-foreground mb-4 text-sm">{cert.description}</p>
                   {cert.link && (
                     <a href={cert.link} target="_blank" rel="noopener noreferrer">
                       <Button variant="outline" className="w-full glow-button-outline">
@@ -326,7 +376,7 @@ const Home = () => {
       <section id="projects" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
-          variants={itemVariants}
+          variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
@@ -349,14 +399,17 @@ const Home = () => {
                 hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-500 ease-in-out
                 hover:rotate-x-3 hover:rotate-y-3 transform-gpu"
               >
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-bold text-primary mb-2">{project.title}</CardTitle>
-                  <CardDescription className="text-muted-foreground">{project.description}</CardDescription>
+                <CardHeader className="p-0">
+                  <img src={project.image} alt={project.title} className="w-full h-48 object-cover rounded-t-xl border-b border-border/50" />
+                  <div className="p-6 pb-4">
+                    <CardTitle className="text-xl font-bold text-primary mb-2">{project.title}</CardTitle>
+                    <CardDescription className="text-muted-foreground text-sm">{project.description}</CardDescription>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
                   <div className="flex flex-wrap gap-2 mb-4">
                     {project.technologies.map((tech) => (
-                      <Badge key={tech} variant="outline" className="bg-secondary/80 text-secondary-foreground">
+                      <Badge key={tech} variant="outline" className="bg-secondary/80 text-secondary-foreground border border-primary/20">
                         {tech}
                       </Badge>
                     ))}
@@ -388,7 +441,7 @@ const Home = () => {
       <section id="contact" className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center p-4">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
-          variants={itemVariants}
+          variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
@@ -396,25 +449,25 @@ const Home = () => {
           Get in <span className="text-primary">Touch</span>
         </motion.h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl">
-          <motion.div
-            className="perspective-1000"
-            variants={itemVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
+        <motion.div
+          className="w-full max-w-5xl perspective-1000"
+          variants={cardVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+        >
+          <Card className="bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
+            hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
+            hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
           >
-            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
-              hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
-            >
-              <CardHeader className="p-6 pb-4">
-                <CardTitle className="text-2xl font-bold text-primary mb-2">Contact Information</CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Feel free to reach out through any of these channels.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-4 text-lg text-muted-foreground">
+            <CardHeader className="p-6 pb-4">
+              <CardTitle className="text-2xl font-bold text-primary mb-2">Connect with Me</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                I'm always open to new opportunities and collaborations.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 pt-0 grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-4 text-lg text-muted-foreground">
                 <motion.div variants={itemVariants} className="flex items-center gap-3">
                   <Mail className="h-6 w-6 text-primary" />
                   <span>johndoe@example.com</span>
@@ -427,51 +480,33 @@ const Home = () => {
                   <MapPin className="h-6 w-6 text-primary" />
                   <span>Anytown, USA</span>
                 </motion.div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            className="perspective-1000"
-            variants={itemVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
-            <Card className="h-full bg-card/70 backdrop-blur-md shadow-2xl border border-border/50 rounded-xl overflow-hidden
-              hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-500 ease-in-out
-              hover:rotate-x-2 hover:rotate-y-2 transform-gpu"
-            >
-              <CardHeader className="p-6 pb-4">
-                <CardTitle className="text-2xl font-bold text-primary mb-2">Send a Message</CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  I'll get back to you as soon as possible.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <motion.div variants={itemVariants}>
-                    <Label htmlFor="name" className="text-foreground">Name</Label>
-                    <Input id="name" placeholder="Your Name" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                  </motion.div>
-                  <motion.div variants={itemVariants}>
-                    <Label htmlFor="email" className="text-foreground">Email</Label>
-                    <Input id="email" type="email" placeholder="your@email.com" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                  </motion.div>
-                  <motion.div variants={itemVariants}>
-                    <Label htmlFor="message" className="text-foreground">Message</Label>
-                    <Textarea id="message" placeholder="Your message..." rows={5} className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
-                  </motion.div>
-                  <motion.div variants={itemVariants}>
-                    <Button type="submit" className="w-full glow-button">
-                      Send Message
-                    </Button>
-                  </motion.div>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+                <motion.div variants={itemVariants} className="flex items-center gap-3">
+                  <Github className="h-6 w-6 text-primary" />
+                  <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">github.com/johndoe</a>
+                </motion.div>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <motion.div variants={itemVariants}>
+                  <Label htmlFor="name" className="text-foreground">Name</Label>
+                  <Input id="name" placeholder="Your Name" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <Label htmlFor="email" className="text-foreground">Email</Label>
+                  <Input id="email" type="email" placeholder="your@email.com" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <Label htmlFor="message" className="text-foreground">Message</Label>
+                  <Textarea id="message" placeholder="Your message..." rows={5} className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <Button type="submit" className="w-full glow-button">
+                    Send Message
+                  </Button>
+                </motion.div>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
       </section>
     </div>
   );
