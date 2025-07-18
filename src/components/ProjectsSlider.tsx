@@ -64,19 +64,24 @@ const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects, options }) =>
 
   useEffect(() => {
     if (!emblaApi) return;
+
+    const autoplay = emblaApi.plugins().autoplay;
+    if (!autoplay) return;
+
     onScroll();
     emblaApi.on('scroll', onScroll).on('reInit', onScroll);
 
-    // When user interaction ends, restart autoplay
-    const onSettle = () => {
-      const autoplay = emblaApi.plugins().autoplay;
-      if (autoplay) autoplay.play();
+    // This function will restart the autoplay after a user interaction
+    const restartAutoplay = () => {
+      autoplay.play();
     };
-    emblaApi.on('settle', onSettle);
+
+    // Add a listener to restart autoplay when the user finishes dragging
+    emblaApi.on('dragEnd', restartAutoplay);
 
     return () => {
       if (emblaApi) {
-        emblaApi.off('settle', onSettle);
+        emblaApi.off('dragEnd', restartAutoplay);
       }
     };
   }, [emblaApi, onScroll]);
