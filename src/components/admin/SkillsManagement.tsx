@@ -47,19 +47,24 @@ const SkillsManagement: React.FC = () => {
     },
   });
 
+  React.useEffect(() => {
+    // When the dialog is closed, reset the form state
+    if (!isDialogOpen) {
+      setEditingSkill(null);
+      setNewSkillCategory("");
+      setNewSkillName("");
+    }
+  }, [isDialogOpen]);
+
   const addSkillMutation = useMutation({
     mutationFn: async (skill: Omit<Skill, "id">) => {
       const { data, error } = await supabase.from("skills").insert(skill).select();
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
       showSuccess("Skill added successfully!");
-      setNewSkillCategory("");
-      setNewSkillName("");
       setIsDialogOpen(false);
     },
     onError: (err: Error) => {
@@ -77,7 +82,6 @@ const SkillsManagement: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
       showSuccess("Skill updated successfully!");
       setIsDialogOpen(false);
-      setEditingSkill(null);
     },
     onError: (err) => {
       showError(`Error updating skill: ${err.message}`);
@@ -115,13 +119,6 @@ const SkillsManagement: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingSkill(null);
-    setNewSkillCategory("");
-    setNewSkillName("");
-  };
-
   if (isLoading) return <div className="text-center text-muted-foreground">Loading skills...</div>;
   if (error) return <div className="text-center text-destructive">Error: {error.message}</div>;
 
@@ -129,9 +126,9 @@ const SkillsManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-foreground">Manage Skills</h2>
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button>
               <PlusCircle className="mr-2 h-4 w-4" /> Add New Skill
             </Button>
           </DialogTrigger>

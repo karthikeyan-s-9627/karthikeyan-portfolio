@@ -60,19 +60,23 @@ const ProjectsManagement: React.FC = () => {
     },
   });
 
+  React.useEffect(() => {
+    if (!isDialogOpen) {
+      setEditingProject(null);
+      setNewProject({ title: "", description: "", technologies: [], github_link: "", live_link: "", image: "" });
+      setTechInput("");
+    }
+  }, [isDialogOpen]);
+
   const addProjectMutation = useMutation({
     mutationFn: async (project: Omit<Project, "id">) => {
       const { data, error } = await supabase.from("projects").insert(project).select();
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       showSuccess("Project added successfully!");
-      setNewProject({ title: "", description: "", technologies: [], github_link: "", live_link: "", image: "" });
-      setTechInput("");
       setIsDialogOpen(false);
     },
     onError: (err: Error) => {
@@ -97,7 +101,6 @@ const ProjectsManagement: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       showSuccess("Project updated successfully!");
       setIsDialogOpen(false);
-      setEditingProject(null);
     },
     onError: (err) => {
       showError(`Error updating project: ${err.message}`);
@@ -158,13 +161,6 @@ const ProjectsManagement: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingProject(null);
-    setNewProject({ title: "", description: "", technologies: [], github_link: "", live_link: "", image: "" });
-    setTechInput("");
-  };
-
   if (isLoading) return <div className="text-center text-muted-foreground">Loading projects...</div>;
   if (error) return <div className="text-center text-destructive">Error: {error.message}</div>;
 
@@ -172,9 +168,9 @@ const ProjectsManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-foreground">Manage Projects</h2>
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button>
               <PlusCircle className="mr-2 h-4 w-4" /> Add New Project
             </Button>
           </DialogTrigger>

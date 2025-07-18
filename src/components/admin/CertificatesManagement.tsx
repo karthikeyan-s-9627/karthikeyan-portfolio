@@ -58,18 +58,22 @@ const CertificatesManagement: React.FC = () => {
     },
   });
 
+  React.useEffect(() => {
+    if (!isDialogOpen) {
+      setEditingCertificate(null);
+      setNewCertificate({ title: "", issuer: "", date: "", description: "", link: "", image: "" });
+    }
+  }, [isDialogOpen]);
+
   const addCertificateMutation = useMutation({
     mutationFn: async (certificate: Omit<Certificate, "id">) => {
       const { data, error } = await supabase.from("certificates").insert(certificate).select();
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
       showSuccess("Certificate added successfully!");
-      setNewCertificate({ title: "", issuer: "", date: "", description: "", link: "", image: "" });
       setIsDialogOpen(false);
     },
     onError: (err: Error) => {
@@ -94,7 +98,6 @@ const CertificatesManagement: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
       showSuccess("Certificate updated successfully!");
       setIsDialogOpen(false);
-      setEditingCertificate(null);
     },
     onError: (err) => {
       showError(`Error updating certificate: ${err.message}`);
@@ -138,12 +141,6 @@ const CertificatesManagement: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingCertificate(null);
-    setNewCertificate({ title: "", issuer: "", date: "", description: "", link: "", image: "" });
-  };
-
   if (isLoading) return <div className="text-center text-muted-foreground">Loading certificates...</div>;
   if (error) return <div className="text-center text-destructive">Error: {error.message}</div>;
 
@@ -151,9 +148,9 @@ const CertificatesManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-foreground">Manage Certificates</h2>
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button>
               <PlusCircle className="mr-2 h-4 w-4" /> Add New Certificate
             </Button>
           </DialogTrigger>
