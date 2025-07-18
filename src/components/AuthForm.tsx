@@ -29,11 +29,29 @@ const AuthForm: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    
     if (error) {
       showError(error.message);
-    } else {
-      showSuccess('Logged in successfully!');
+      setLoading(false);
+      return;
+    }
+
+    if (data.user) {
+      // Check if the user is an admin
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError || !profileData?.is_admin) {
+        // If not an admin or profile not found, log them out
+        await supabase.auth.signOut();
+        showError('You do not have admin privileges to access this dashboard.');
+      } else {
+        showSuccess('Logged in successfully!');
+      }
     }
     setLoading(false);
   };
