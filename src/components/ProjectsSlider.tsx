@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import useEmblaCarousel, { EmblaCarouselType, EmblaOptionsType } from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
@@ -27,7 +28,10 @@ const numberWithinRange = (number: number, min: number, max: number): number =>
   Math.min(Math.max(number, min), max);
 
 const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects, options }) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ ...options, loop: true });
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { ...options, loop: true },
+    [Autoplay({ delay: 4000, stopOnInteraction: true, stopOnMouseEnter: true })]
+  );
   const [tweenValues, setTweenValues] = useState<number[]>([]);
 
   const onScroll = useCallback(() => {
@@ -62,6 +66,18 @@ const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects, options }) =>
     if (!emblaApi) return;
     onScroll();
     emblaApi.on('scroll', onScroll).on('reInit', onScroll);
+
+    // When user interaction ends, restart autoplay
+    const onSettle = () => {
+      emblaApi.plugins().autoplay.play();
+    };
+    emblaApi.on('settle', onSettle);
+
+    return () => {
+      if (emblaApi) {
+        emblaApi.off('settle', onSettle);
+      }
+    };
   }, [emblaApi, onScroll]);
 
   return (
