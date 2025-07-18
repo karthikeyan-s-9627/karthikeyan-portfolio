@@ -1,0 +1,316 @@
+"use client";
+
+import React from "react";
+import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { showSuccess, showError } from "@/utils/toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { PlusCircle, Trash2, Edit } from "lucide-react";
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  github_link?: string;
+  live_link?: string;
+  image?: string;
+}
+
+const ProjectsManagement: React.FC = () => {
+  const queryClient = useQueryClient();
+  const [newProject, setNewProject] = React.useState<Omit<Project, "id">>({
+    title: "",
+    description: "",
+    technologies: [],
+    github_link: "",
+    live_link: "",
+    image: "",
+  });
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editingProject, setEditingProject] = React.useState<Project | null>(null);
+  const [techInput, setTechInput] = React.useState("");
+
+  const { data: projects, isLoading, error } = useQuery<Project[], Error>({
+    queryKey: ["projects"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addProjectMutation = useMutation<null, Error, Omit<Project, "id">, unknown>({
+    mutationFn: async (project) => {
+      const { error } = await supabase.from("projects").insert(project);
+      if (error) throw error;
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      showSuccess("Project added successfully!");
+      setNewProject({ title: "", description: "", technologies: [], github_link: "", live_link: "", image: "" });
+      setTechInput("");
+      setIsDialogOpen(false);
+    },
+    onError: (err) => {
+      showError(`Error adding project: ${err.message}`);
+    },
+  });
+
+  const updateProjectMutation = useMutation<null, Error, Project, unknown>({
+    mutationFn: async (project) => {
+      const { error } = await supabase.from("projects").update({
+        title: project.title,
+        description: project.description,
+        technologies: project.technologies,
+        github_link: project.github_link,
+        live_link: project.live_link,
+        image: project.image,
+      }).eq("id", project.id);
+      if (error) throw error;
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      showSuccess("Project updated successfully!");
+      setIsDialogOpen(false);
+      setEditingProject(null);
+    },
+    onError: (err) => {
+      showError(`Error updating project: ${err.message}`);
+    },
+  });
+
+  const deleteProjectMutation = useMutation<null, Error, string, unknown>({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from("projects").delete().eq("id", id);
+      if (error) throw error;
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      showSuccess("Project deleted successfully!");
+    },
+    onError: (err) => {
+      showError(`Error deleting project: ${err.message}`);
+    },
+  });
+
+  const handleAddTechnology = () => {
+    if (techInput.trim() && !newProject.technologies.includes(techInput.trim())) {
+      setNewProject({
+        ...newProject,
+        technologies: [...newProject.technologies, techInput.trim()],
+      });
+      setTechInput("");
+    }
+  };
+
+  const handleRemoveTechnology = (techToRemove: string) => {
+    setNewProject({
+      ...newProject,
+      technologies: newProject.technologies.filter((tech) => tech !== techToRemove),
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingProject) {
+      updateProjectMutation.mutate({ ...editingProject, ...newProject });
+    } else {
+      addProjectMutation.mutate(newProject);
+    }
+  };
+
+  const handleEditClick = (project: Project) => {
+    setEditingProject(project);
+    setNewProject({
+      title: project.title,
+      description: project.description,
+      technologies: project.technologies || [],
+      github_link: project.github_link || "",
+      live_link: project.live_link || "",
+      image: project.image || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingProject(null);
+    setNewProject({ title: "", description: "", technologies: [], github_link: "", live_link: "", image: "" });
+    setTechInput("");
+  };
+
+  if (isLoading) return <div className="text-center text-muted-foreground">Loading projects...</div>;
+  if (error) return <div className="text-center text-destructive">Error: {error.message}</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-foreground">Manage Projects</h2>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add New Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px] bg-card border-border/50">
+            <DialogHeader>
+              <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">Title</Label>
+                <Input
+                  id="title"
+                  value={newProject.title}
+                  onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
+                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">Description</Label>
+                <Textarea
+                  id="description"
+                  value={newProject.description}
+                  onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="technologies" className="text-right">Technologies</Label>
+                <div className="col-span-3 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Input
+                      id="technologies"
+                      value={techInput}
+                      onChange={(e) => setTechInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddTechnology();
+                        }
+                      }}
+                      placeholder="Add technology (e.g., React)"
+                      className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                    />
+                    <Button type="button" onClick={handleAddTechnology} variant="outline">Add</Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {newProject.technologies.map((tech, index) => (
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                        {tech}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0.5"
+                          onClick={() => handleRemoveTechnology(tech)}
+                        >
+                          &times;
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="github_link" className="text-right">GitHub Link (Optional)</Label>
+                <Input
+                  id="github_link"
+                  value={newProject.github_link}
+                  onChange={(e) => setNewProject({ ...newProject, github_link: e.target.value })}
+                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="live_link" className="text-right">Live Link (Optional)</Label>
+                <Input
+                  id="live_link"
+                  value={newProject.live_link}
+                  onChange={(e) => setNewProject({ ...newProject, live_link: e.target.value })}
+                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="image" className="text-right">Image URL (Optional)</Label>
+                <Input
+                  id="image"
+                  value={newProject.image}
+                  onChange={(e) => setNewProject({ ...newProject, image: e.target.value })}
+                  className="col-span-3 bg-input/50 border-border/50 focus:border-primary"
+                />
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={addProjectMutation.isPending || updateProjectMutation.isPending}>
+                  {editingProject ? (updateProjectMutation.isPending ? "Saving..." : "Save Changes") : (addProjectMutation.isPending ? "Adding..." : "Add Project")}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="rounded-md border border-border/50 shadow-lg overflow-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[150px]">Title</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="w-[200px]">Technologies</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {projects?.map((project) => (
+              <TableRow key={project.id}>
+                <TableCell className="font-medium">{project.title}</TableCell>
+                <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{project.description}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {project.technologies?.map((tech, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs">{tech}</Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="text-right flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEditClick(project)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => deleteProjectMutation.mutate(project.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
+
+export default ProjectsManagement;

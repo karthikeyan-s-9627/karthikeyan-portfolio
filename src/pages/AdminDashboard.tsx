@@ -6,7 +6,9 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { showError } from "@/utils/toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SkillsManagement from "@/components/admin/SkillsManagement"; // Import the new component
+import SkillsManagement from "@/components/admin/SkillsManagement";
+import CertificatesManagement from "@/components/admin/CertificatesManagement"; // Import new component
+import ProjectsManagement from "@/components/admin/ProjectsManagement"; // Import new component
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
@@ -86,21 +88,15 @@ const AdminDashboard: React.FC = () => {
           </TabsContent>
           <TabsContent value="certificates">
             <Card className="bg-card shadow-lg border border-border/50">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-primary">Manage Certificates</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                <p>Certificate management coming soon!</p>
+              <CardContent className="p-6">
+                <CertificatesManagement /> {/* Use the new component */}
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="projects">
             <Card className="bg-card shadow-lg border border-border/50">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-primary">Manage Projects</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                <p>Project management coming soon!</p>
+              <CardContent className="p-6">
+                <ProjectsManagement /> {/* Use the new component */}
               </CardContent>
             </Card>
           </TabsContent>

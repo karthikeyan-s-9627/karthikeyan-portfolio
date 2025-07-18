@@ -9,100 +9,38 @@ import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Brie
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { showSuccess } from "@/utils/toast";
+import { showSuccess, showError } from "@/utils/toast";
 import CertificatesCarousel from "@/components/CertificatesCarousel";
 import ProjectsSlider from "@/components/ProjectsSlider";
-import { supabase } from "@/lib/supabase"; // Import supabase
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import { supabase } from "@/lib/supabase";
+import { useQuery } from "@tanstack/react-query";
 
-// Data for sections (moved from individual pages)
-// skillsData will now be fetched from Supabase
+// Define interfaces for fetched data
+interface Skill {
+  id: string;
+  category: string;
+  name: string;
+}
 
-const certificatesData = [
-  {
-    title: "Full Stack Web Development Bootcamp",
-    issuer: "Udemy",
-    date: "May 2023",
-    description: "Comprehensive course covering MERN stack development, including React, Node.js, Express, and MongoDB.",
-    link: "#", // Placeholder link
-    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+1",
-  },
-  {
-    title: "Machine Learning Specialization",
-    issuer: "Coursera (DeepLearning.AI)",
-    date: "August 2023",
-    description: "Specialization focused on supervised learning, unsupervised learning, and neural networks.",
-    link: "#", // Placeholder link
-    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+2",
-  },
-  {
-    title: "AWS Certified Cloud Practitioner",
-    issuer: "Amazon Web Services (AWS)",
-    date: "November 2023",
-    description: "Foundational understanding of AWS cloud concepts, services, security, architecture, pricing, and support.",
-    link: "#", // Placeholder link
-    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+3",
-  },
-  {
-    title: "Data Science with Python",
-    issuer: "IBM",
-    date: "January 2024",
-    description: "Hands-on course covering data analysis, visualization, machine learning, and deep learning using Python.",
-    link: "#", // Placeholder link
-    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+4",
-  },
-  {
-    title: "Google Project Management",
-    issuer: "Google",
-    date: "March 2024",
-    description: "Professional certificate covering foundational project management skills, agile methodologies, and Scrum.",
-    link: "#", // Placeholder link
-    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+5",
-  },
-  {
-    title: "Cybersecurity Fundamentals",
-    issuer: "CompTIA",
-    date: "April 2024",
-    description: "Introduction to cybersecurity concepts, threats, vulnerabilities, and security controls.",
-    link: "#", // Placeholder link
-    image: "https://via.placeholder.com/300x200/1A202C/66FCF1?text=Certificate+6",
-  },
-];
+interface Certificate {
+  id: string;
+  title: string;
+  issuer: string;
+  date: string;
+  description: string;
+  link?: string;
+  image?: string;
+}
 
-const projectsData = [
-  {
-    title: "E-commerce Platform",
-    description: "A full-stack e-commerce application with user authentication, product listings, shopping cart, and payment integration.",
-    technologies: ["React", "Node.js", "Express", "MongoDB", "Stripe", "Tailwind CSS"],
-    githubLink: "#", // Placeholder link
-    liveLink: "#", // Placeholder link
-    image: "https://via.placeholder.com/400x250/1A202C/66FCF1?text=Project+1",
-  },
-  {
-    title: "AI Chatbot Assistant",
-    description: "An intelligent chatbot powered by natural language processing, capable of answering queries and performing tasks.",
-    technologies: ["Python", "Flask", "OpenAI API", "React", "TypeScript"],
-    githubLink: "#", // Placeholder link
-    liveLink: "#", // Placeholder link
-    image: "https://via.placeholder.com/400x250/1A202C/66FCF1?text=Project+2",
-  },
-  {
-    title: "Personal Blog Site",
-    description: "A responsive blog platform with a rich text editor, comment section, and admin panel for content management.",
-    technologies: ["Next.js", "TypeScript", "Sanity.io", "GraphQL", "Tailwind CSS"],
-    githubLink: "#", // Placeholder link
-    liveLink: "#", // Placeholder link
-    image: "https://via.placeholder.com/400x250/1A202C/66FCF1?text=Project+3",
-  },
-  {
-    title: "Task Management App",
-    description: "A simple and intuitive task management application with drag-and-drop functionality and user-specific dashboards.",
-    technologies: ["React", "Redux", "Firebase", "Chakra UI"],
-    githubLink: "#", // Placeholder link
-    liveLink: "#", // Placeholder link
-    image: "https://via.placeholder.com/400x250/1A202C/66FCF1?text=Project+4",
-  },
-];
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  github_link?: string;
+  live_link?: string;
+  image?: string;
+}
 
 const Home = () => {
   const sectionTitleVariants = {
@@ -176,10 +114,30 @@ const Home = () => {
   };
 
   // Fetch skills data from Supabase
-  const { data: skills, isLoading: isLoadingSkills, error: skillsError } = useQuery<Array<{ id: string; category: string; name: string }>, Error>({
+  const { data: skills, isLoading: isLoadingSkills, error: skillsError } = useQuery<Skill[], Error>({
     queryKey: ["skills"],
     queryFn: async () => {
       const { data, error } = await supabase.from("skills").select("*").order("category").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch certificates data from Supabase
+  const { data: certificates, isLoading: isLoadingCertificates, error: certificatesError } = useQuery<Certificate[], Error>({
+    queryKey: ["certificates"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("certificates").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch projects data from Supabase
+  const { data: projects, isLoading: isLoadingProjects, error: projectsError } = useQuery<Project[], Error>({
+    queryKey: ["projects"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -202,11 +160,10 @@ const Home = () => {
     "Programming Languages": Code,
     "Frontend Development": Lightbulb,
     "Backend Development": Briefcase,
-    "Databases": Code, // Using Code for database, you can change this
-    "Tools & Technologies": Briefcase, // Using Briefcase for tools, you can change this
-    "Concepts": Lightbulb, // Using Lightbulb for concepts, you can change this
+    "Databases": Code,
+    "Tools & Technologies": Briefcase,
+    "Concepts": Lightbulb,
   };
-
 
   return (
     <div className="space-y-24 lg:space-y-32">
@@ -395,8 +352,15 @@ const Home = () => {
           My <span className="text-primary">Certificates</span>
         </motion.h1>
 
-        {/* Use the new CertificatesCarousel component */}
-        <CertificatesCarousel certificates={certificatesData} />
+        {isLoadingCertificates ? (
+          <div className="text-center text-muted-foreground">Loading certificates...</div>
+        ) : certificatesError ? (
+          <div className="text-center text-destructive">Error loading certificates: {certificatesError.message}</div>
+        ) : certificates && certificates.length > 0 ? (
+          <CertificatesCarousel certificates={certificates} />
+        ) : (
+          <div className="text-center text-muted-foreground">No certificates found.</div>
+        )}
       </section>
 
       {/* Projects Section */}
@@ -411,7 +375,15 @@ const Home = () => {
           My <span className="text-primary">Projects</span>
         </motion.h1>
 
-        <ProjectsSlider projects={projectsData} />
+        {isLoadingProjects ? (
+          <div className="text-center text-muted-foreground">Loading projects...</div>
+        ) : projectsError ? (
+          <div className="text-center text-destructive">Error loading projects: {projectsError.message}</div>
+        ) : projects && projects.length > 0 ? (
+          <ProjectsSlider projects={projects} />
+        ) : (
+          <div className="text-center text-muted-foreground">No projects found.</div>
+        )}
       </section>
 
       {/* Contact Section */}
