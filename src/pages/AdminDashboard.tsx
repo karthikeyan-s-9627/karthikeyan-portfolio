@@ -13,7 +13,6 @@ import ContactMessagesManagement from "@/components/admin/ContactMessagesManagem
 import AboutMeManagement from "@/components/admin/AboutMeManagement";
 import HeroManagement from "@/components/admin/HeroManagement";
 import ContactInfoManagement from "@/components/admin/ContactInfoManagement";
-import ResumeManagement from "@/components/admin/ResumeManagement"; // Import new component
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
@@ -79,14 +78,13 @@ const AdminDashboard: React.FC = () => {
         </Card>
       ) : session && isAdmin ? (
         <Tabs defaultValue="hero-section" className="w-full mt-8">
-          <TabsList className="grid w-full grid-cols-8"> {/* Changed to 8 columns */}
+          <TabsList className="grid w-full grid-cols-7"> {/* Reverted to 7 columns */}
             <TabsTrigger value="hero-section">Hero</TabsTrigger>
             <TabsTrigger value="about-me">About Me</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="certificates">Certificates</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="contact-info">Contact Info</TabsTrigger>
-            <TabsTrigger value="resume">Resume</TabsTrigger> {/* New tab */}
             <TabsTrigger value="messages">Messages</TabsTrigger>
           </TabsList>
           <TabsContent value="hero-section">
@@ -128,13 +126,6 @@ const AdminDashboard: React.FC = () => {
             <Card className="bg-card shadow-lg border border-border/50">
               <CardContent className="p-6">
                 <ContactInfoManagement />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="resume"> {/* New tab content */}
-            <Card className="bg-card shadow-lg border border-border/50">
-              <CardContent className="p-6">
-                <ResumeManagement />
               </CardContent>
             </Card>
           </TabsContent>

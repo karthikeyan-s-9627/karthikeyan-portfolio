@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User, Linkedin, Twitter, Instagram, Send, Loader2, FileText } from "lucide-react";
+import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User, Linkedin, Twitter, Instagram, Send, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -71,16 +71,8 @@ interface ContactInfo {
   updated_at: string;
 }
 
-interface Resume {
-  id: string;
-  title: string;
-  file_path: string;
-  updated_at: string;
-}
-
 const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001"; // Matches the default ID in SQL
 const CONTACT_INFO_SINGLETON_ID = "00000000-0000-0000-0000-000000000002"; // Matches the default ID in SQL
-const RESUME_SINGLETON_ID = "00000000-0000-0000-0000-000000000003"; // Matches the default ID in SQL
 
 const Home = () => {
   const [contactName, setContactName] = React.useState("");
@@ -289,30 +281,6 @@ const Home = () => {
     },
   });
 
-  // Fetch Resume from Supabase
-  const { data: resumeData, isLoading: isLoadingResume, error: resumeError } = useQuery<Resume, Error>({
-    queryKey: ["resume"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("resumes")
-        .select("*")
-        .eq("id", RESUME_SINGLETON_ID)
-        .single();
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return {
-            id: RESUME_SINGLETON_ID,
-            title: "My Resume",
-            file_path: "",
-            updated_at: new Date().toISOString(),
-          };
-        }
-        throw error;
-      }
-      return data;
-    },
-  });
-
 
   // Group skills by category for display
   const groupedSkills = React.useMemo(() => {
@@ -372,31 +340,13 @@ const Home = () => {
                 View Projects
               </Button>
             </a>
-            {isLoadingResume ? (
+            <a href="#contact">
               <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
                 border-primary text-primary hover:bg-primary/10 hover:text-foreground transition-all duration-300
-                hover:scale-105" disabled>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading Resume
+                hover:scale-105">
+                Get in Touch
               </Button>
-            ) : resumeError ? (
-              <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
-                border-destructive text-destructive hover:bg-destructive/10" disabled>
-                Error Loading Resume
-              </Button>
-            ) : resumeData?.file_path ? (
-              <a href={resumeData.file_path} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
-                  border-primary text-primary hover:bg-primary/10 hover:text-foreground transition-all duration-300
-                  hover:scale-105">
-                  <FileText className="mr-2 h-5 w-5" /> {resumeData.title || "Download Resume"}
-                </Button>
-              </a>
-            ) : (
-              <Button variant="outline" className="w-full sm:w-auto px-8 py-3 text-lg font-semibold rounded-full shadow-lg
-                border-muted-foreground text-muted-foreground" disabled>
-                No Resume Available
-              </Button>
-            )}
+            </a>
           </motion.div>
         </div>
         <motion.div
