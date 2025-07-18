@@ -30,7 +30,7 @@ const numberWithinRange = (number: number, min: number, max: number): number =>
 const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects, options }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { ...options, loop: true },
-    [Autoplay({ delay: 4000, stopOnInteraction: true, stopOnMouseEnter: true })]
+    [Autoplay({ delay: 4000, stopOnInteraction: true })]
   );
   const [tweenValues, setTweenValues] = useState<number[]>([]);
 
@@ -69,7 +69,8 @@ const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects, options }) =>
 
     // When user interaction ends, restart autoplay
     const onSettle = () => {
-      emblaApi.plugins().autoplay.play();
+      const autoplay = emblaApi.plugins().autoplay;
+      if (autoplay) autoplay.play();
     };
     emblaApi.on('settle', onSettle);
 
