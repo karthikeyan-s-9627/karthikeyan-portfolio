@@ -4,7 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import MainLayout from "./components/layout/MainLayout";
-import Home from "./pages/Home"; // Now Home will contain all sections
+import AdminLayout from "./components/layout/AdminLayout"; // Import AdminLayout
+import Home from "./pages/Home";
+import AdminDashboard from "./pages/AdminDashboard"; // Import AdminDashboard
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // Import React Router components
 
 const queryClient = new QueryClient();
 
@@ -14,10 +17,26 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {/* MainLayout will wrap the single Home page */}
-        <MainLayout>
-          <Home />
-        </MainLayout>
+        <Router>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <MainLayout>
+                  <Home />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminLayout>
+                  <AdminDashboard />
+                </AdminLayout>
+              }
+            />
+          </Routes>
+        </Router>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
