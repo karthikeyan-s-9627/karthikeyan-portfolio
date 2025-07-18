@@ -22,10 +22,10 @@ interface CertificatesCarouselProps {
 const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificates }) => {
   const numCertificates = certificates.length;
   const angle = 360 / numCertificates;
-  const radius = 450; // The distance of the cards from the center
+  const radius = 300; // Reduced from 450
 
   return (
-    <div className="relative w-full h-[500px] overflow-hidden">
+    <div className="relative w-full h-[400px] overflow-hidden">
       <div className="carousel-slider">
         {certificates.map((cert, index) => (
           <div
@@ -43,22 +43,22 @@ const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificate
               <Card className="w-full h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
                 hover:shadow-primary/50 hover:scale-[1.02] transition-all duration-300">
                 <CardHeader className="p-0">
-                  <img src={cert.image} alt={cert.title} className="w-full h-40 object-cover rounded-t-xl border-b border-border/50" />
-                  <div className="p-6 pb-4">
-                    <CardTitle className="text-xl font-bold text-primary mb-1 flex items-center gap-2">
+                  <img src={cert.image} alt={cert.title} className="w-full h-32 object-cover rounded-t-xl border-b border-border/50" />
+                  <div className="p-4 pb-2">
+                    <CardTitle className="text-lg font-bold text-primary mb-1 flex items-center gap-2">
                       <Award className="h-5 w-5" /> {cert.title}
                     </CardTitle>
-                    <CardDescription className="text-muted-foreground text-sm">
+                    <CardDescription className="text-muted-foreground text-xs">
                       {cert.issuer} | {cert.date}
                     </CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent className="p-6 pt-0">
-                    <p className="text-muted-foreground mb-4 text-sm">{cert.description}</p>
+                <CardContent className="p-4 pt-0">
+                    <p className="text-muted-foreground mb-3 text-xs">{cert.description}</p>
                     {cert.link && (
                       <a href={cert.link} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" className="w-full">
-                          View Credential <ExternalLink className="ml-2 h-4 w-4" />
+                        <Button variant="outline" size="sm" className="w-full">
+                          View Credential <ExternalLink className="ml-2 h-3 w-3" />
                         </Button>
                       </a>
                     )}
