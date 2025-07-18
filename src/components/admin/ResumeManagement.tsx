@@ -60,9 +60,15 @@ const ResumeManagement: React.FC = () => {
 
   const upsertResumeMutation = useMutation<null, Error, Partial<Resume>, unknown>({
     mutationFn: async (resumeData) => {
+      const dataToUpsert = {
+        id: RESUME_SINGLETON_ID,
+        title: resume?.title ?? DEFAULT_RESUME.title,
+        file_path: resume?.file_path ?? DEFAULT_RESUME.file_path,
+        ...resumeData,
+      };
       const { error } = await supabase
         .from("resumes")
-        .upsert({ id: RESUME_SINGLETON_ID, ...resumeData })
+        .upsert(dataToUpsert)
         .eq("id", RESUME_SINGLETON_ID);
       if (error) throw error;
       return null;

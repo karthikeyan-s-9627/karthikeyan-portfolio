@@ -33,12 +33,14 @@ const HeroManagement: React.FC = () => {
   const [tagline, setTagline] = React.useState("");
   const [heroImageUrl, setHeroImageUrl] = React.useState("");
   const [userId, setUserId] = React.useState<string | null>(null);
+  const [userEmail, setUserEmail] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUserId(session.user.id);
+        setUserEmail(session.user.email ?? null);
       }
     };
     getSession();
@@ -76,7 +78,7 @@ const HeroManagement: React.FC = () => {
     }
   }, [profile]);
 
-  const updateProfileMutation = useMutation<null, Error, Partial<Profile>, unknown>({
+  const updateProfileMutation = useMutation<null, Error, Partial<Profile> & { email: string }, unknown>({
     mutationFn: async (profileData) => {
       if (!userId) throw new Error("User ID not available for update.");
       const { error } = await supabase
@@ -97,11 +99,16 @@ const HeroManagement: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userEmail) {
+      showError("User email not found. Cannot update profile.");
+      return;
+    }
     updateProfileMutation.mutate({
       first_name: firstName,
       last_name: lastName,
       tagline: tagline,
       hero_image_url: heroImageUrl,
+      email: userEmail,
     });
   };
 
