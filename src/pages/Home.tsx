@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User, Linkedin, Twitter } from "lucide-react";
+import { ExternalLink, Github, Mail, Phone, MapPin, Award, Code, Lightbulb, Briefcase, User, Linkedin, Twitter, Instagram, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -450,6 +450,18 @@ const Home = () => {
                 <div className="flex items-center gap-3">
                   <Twitter className="h-6 w-6 text-primary" />
                   <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">twitter.com/johndoe</a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Instagram className="h-6 w-6 text-primary" />
+                  <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">instagram.com/johndoe</a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="h-6 w-6 text-primary" />
+                  <a href="https://wa.me/11234567890" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">WhatsApp</a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Send className="h-6 w-6 text-primary" />
+                  <a href="https://t.me/johndoe" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Telegram</a>
                 </div>
               </CardContent>
             </Card>
