@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { showError } from "@/utils/toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SkillsManagement from "@/components/admin/SkillsManagement";
-import CertificatesManagement from "@/components/admin/CertificatesManagement"; // Import new component
-import ProjectsManagement from "@/components/admin/ProjectsManagement"; // Import new component
+import CertificatesManagement from "@/components/admin/CertificatesManagement";
+import ProjectsManagement from "@/components/admin/ProjectsManagement";
+import ContactMessagesManagement from "@/components/admin/ContactMessagesManagement"; // Import new component
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = React.useState<any>(null);
@@ -74,10 +75,11 @@ const AdminDashboard: React.FC = () => {
         </Card>
       ) : session && isAdmin ? (
         <Tabs defaultValue="skills" className="w-full mt-8">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4"> {/* Changed to 4 columns */}
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="certificates">Certificates</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger> {/* New tab */}
           </TabsList>
           <TabsContent value="skills">
             <Card className="bg-card shadow-lg border border-border/50">
@@ -89,14 +91,21 @@ const AdminDashboard: React.FC = () => {
           <TabsContent value="certificates">
             <Card className="bg-card shadow-lg border border-border/50">
               <CardContent className="p-6">
-                <CertificatesManagement /> {/* Use the new component */}
+                <CertificatesManagement />
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="projects">
             <Card className="bg-card shadow-lg border border-border/50">
               <CardContent className="p-6">
-                <ProjectsManagement /> {/* Use the new component */}
+                <ProjectsManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="messages"> {/* New tab content */}
+            <Card className="bg-card shadow-lg border border-border/50">
+              <CardContent className="p-6">
+                <ContactMessagesManagement />
               </CardContent>
             </Card>
           </TabsContent>

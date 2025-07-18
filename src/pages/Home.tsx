@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import CertificatesCarousel from "@/components/CertificatesCarousel";
-import ProjectsSlider from "@/components/ProjectsSlider";
+import ProjectsSlider from "@/components/Projects/ProjectsSlider";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 
@@ -43,6 +43,11 @@ interface Project {
 }
 
 const Home = () => {
+  const [contactName, setContactName] = React.useState("");
+  const [contactEmail, setContactEmail] = React.useState("");
+  const [contactMessage, setContactMessage] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const sectionTitleVariants = {
     hidden: { opacity: 0, y: -50 },
     visible: {
@@ -107,10 +112,25 @@ const Home = () => {
     }),
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted!");
-    showSuccess("Your message has been sent!");
+    setIsSubmitting(true);
+
+    const { error } = await supabase.from("contact_messages").insert({
+      name: contactName,
+      email: contactEmail,
+      message: contactMessage,
+    });
+
+    if (error) {
+      showError(`Failed to send message: ${error.message}`);
+    } else {
+      showSuccess("Your message has been sent successfully!");
+      setContactName("");
+      setContactEmail("");
+      setContactMessage("");
+    }
+    setIsSubmitting(false);
   };
 
   // Fetch skills data from Supabase
@@ -474,19 +494,42 @@ const Home = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <Label htmlFor="name" className="text-foreground">Name</Label>
-                    <Input id="name" placeholder="Your Name" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                    <Input
+                      id="name"
+                      placeholder="Your Name"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      required
+                      className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                    />
                   </div>
                   <div>
                     <Label htmlFor="email" className="text-foreground">Email</Label>
-                    <Input id="email" type="email" placeholder="your@email.com" className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      required
+                      className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                    />
                   </div>
                   <div>
                     <Label htmlFor="message" className="text-foreground">Message</Label>
-                    <Textarea id="message" placeholder="Your message..." rows={5} className="mt-1 bg-input/50 border-border/50 focus:border-primary" />
+                    <Textarea
+                      id="message"
+                      placeholder="Your message..."
+                      rows={5}
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      required
+                      className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                    />
                   </div>
                   <div>
-                    <Button type="submit" className="w-full">
-                      Send Message
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? "Sending..." : "Send Message"}
                     </Button>
                   </div>
                 </form>
