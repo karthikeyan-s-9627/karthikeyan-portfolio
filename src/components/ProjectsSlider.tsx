@@ -28,7 +28,7 @@ const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects }) => {
         {duplicatedProjects.map((project, index) => (
           <div className="project-slide" key={index}>
             <Card className="h-full bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl overflow-hidden flex flex-col
-              shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_30px_60px_-15px_hsl(var(--primary)/0.6)] hover:scale-[1.02] transition-all duration-300">
+              shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6)] dark:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_30px_60px_-15px_hsl(var(--primary)/0.6)] hover:scale-[1.02] transition-all duration-300">
               <div className="relative h-[60%]">
                 <img
                   src={project.image}
