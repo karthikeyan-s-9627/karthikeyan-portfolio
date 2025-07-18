@@ -169,7 +169,7 @@ const Home = () => {
   const { data: skills, isLoading: isLoadingSkills, error: skillsError } = useQuery<Skill[], Error>({
     queryKey: ["skills"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("skills").select("*").order("category").order("name");
+      const { data, error } = await supabase.from("skills").select("*").order("position", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data;
     },
@@ -179,7 +179,7 @@ const Home = () => {
   const { data: certificates, isLoading: isLoadingCertificates, error: certificatesError } = useQuery<Certificate[], Error>({
     queryKey: ["certificates"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("certificates").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("certificates").select("*").order("position", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data;
     },
@@ -189,7 +189,7 @@ const Home = () => {
   const { data: projects, isLoading: isLoadingProjects, error: projectsError } = useQuery<Project[], Error>({
     queryKey: ["projects"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("projects").select("*").order("position", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data;
     },
