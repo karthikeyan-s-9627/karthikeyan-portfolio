@@ -272,7 +272,7 @@ const Home = () => {
         </motion.h1>
 
         <motion.div
-          className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8"
+          className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
