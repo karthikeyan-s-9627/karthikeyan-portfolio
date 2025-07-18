@@ -300,7 +300,7 @@ const Home = () => {
               </CardContent>
             </Card>
           </motion.div>
-          <motion.div variants={cardVariants} className="flex items-center justify-center">
+          <motion.div variants={cardVariants} className="hidden md:flex items-center justify-center">
             <img
               src="https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image" // Placeholder image for About section
               alt="About John Doe"
