@@ -318,7 +318,7 @@ const HeroManagement: React.FC = () => {
         <CardHeader>
           <CardTitle>Edit Your Hero Content</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6 max-h-[calc(100vh-280px)] overflow-y-auto">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="firstName">First Name</Label>
