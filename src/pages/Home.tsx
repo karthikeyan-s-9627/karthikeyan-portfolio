@@ -514,7 +514,7 @@ const Home = () => {
       </section>
 
       {/* Certificates Section */}
-      <section id="certificates" className="min-h-screen flex flex-col items-center justify-center p-4">
+      <section id="certificates" className="min-h-screen flex flex-col items-center justify-center p-4 relative">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
           variants={sectionTitleVariants}
@@ -542,7 +542,7 @@ const Home = () => {
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
+      <section id="projects" className="min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden relative">
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold mb-12 text-foreground drop-shadow-lg"
           variants={sectionTitleVariants}

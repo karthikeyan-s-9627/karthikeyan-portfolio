@@ -148,13 +148,13 @@
 
 .carousel-slider {
   position: absolute;
-  width: 200px; /* Reduced from 300px */
-  height: 250px; /* Reduced from 350px */
+  width: 300px; /* Increased from 200px */
+  height: 350px; /* Increased from 250px */
   top: 15%;
-  left: calc(50% - 100px); /* Adjusted for new width */
+  left: calc(50% - 150px); /* Adjusted for new width */
   transform-style: preserve-3d;
   transform: perspective(1000px); /* Set initial perspective */
-  animation: carouselAutoRun 25s linear infinite;
+  /* animation: carouselAutoRun 25s linear infinite; */ /* Temporarily disabled */
 }
 
 .carousel-item {
@@ -170,14 +170,14 @@
 }
 
 .continuous-scroll-container {
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  /* -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); */ /* Temporarily disabled */
+  /* mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); */ /* Temporarily disabled */
 }
 
 .continuous-scroll-content {
   display: flex;
   width: max-content;
-  animation: continuous-scroll 20s linear infinite;
+  /* animation: continuous-scroll 20s linear infinite; */ /* Temporarily disabled */
 }
 
 /* Removed: .continuous-scroll-content:hover { animation-play-state: paused; } */
