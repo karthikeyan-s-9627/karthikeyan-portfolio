@@ -112,7 +112,7 @@
     linear-gradient(to right, hsl(var(--border)/0.1) 1px, transparent 1px),
     linear-gradient(to bottom, hsl(var(--border)/0.1) 1px, transparent 1px);
   background-size: 40px 40px; /* Size of the grid cells */
-  /* animation: background-pan 30s linear infinite; */ /* DISABLED FOR PERFORMANCE */
+  animation: background-pan 30s linear infinite; /* RE-ENABLED */
   opacity: 0.3; /* Subtle opacity */
 }
 
@@ -125,7 +125,7 @@
   height: 100%;
   z-index: -2; /* Even further back */
   background: radial-gradient(circle at center, hsl(var(--primary)/0.1) 0%, transparent 50%);
-  /* animation: radial-pulse 10s infinite alternate; */ /* DISABLED FOR PERFORMANCE */
+  animation: radial-pulse 10s infinite alternate; /* RE-ENABLED */
 }
 
 .neon-shadow-primary {
@@ -148,13 +148,13 @@
 
 .carousel-slider {
   position: absolute;
-  width: 300px; /* Increased from 200px */
-  height: 350px; /* Increased from 250px */
+  width: 200px; /* Reverted */
+  height: 250px; /* Reverted */
   top: 15%;
-  left: calc(50% - 150px); /* Adjusted for new width */
+  left: calc(50% - 100px); /* Adjusted for original width */
   transform-style: preserve-3d;
   transform: perspective(1000px); /* Set initial perspective */
-  /* animation: carouselAutoRun 25s linear infinite; */ /* Temporarily disabled */
+  animation: carouselAutoRun 25s linear infinite; /* RE-ENABLED */
 }
 
 .carousel-item {
@@ -170,17 +170,17 @@
 }
 
 .continuous-scroll-container {
-  /* -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); */ /* Temporarily disabled */
-  /* mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); */ /* Temporarily disabled */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); /* RE-ENABLED */
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); /* RE-ENABLED */
 }
 
 .continuous-scroll-content {
   display: flex;
   width: max-content;
-  /* animation: continuous-scroll 20s linear infinite; */ /* Temporarily disabled */
+  animation: continuous-scroll 20s linear infinite; /* RE-ENABLED */
 }
 
-/* Removed: .continuous-scroll-content:hover { animation-play-state: paused; } */
+.continuous-scroll-content:hover { animation-play-state: paused; } /* RE-ENABLED */
 
 .project-slide {
   width: 70vw;

@@ -22,7 +22,7 @@ interface CertificatesCarouselProps {
 const CertificatesCarousel: React.FC<CertificatesCarouselProps> = ({ certificates }) => {
   const numCertificates = certificates.length;
   const angle = 360 / numCertificates;
-  const radius = 450; // Increased from 300
+  const radius = 300; // Reverted to original
 
   return (
     <div className="relative w-full h-[500px]">
