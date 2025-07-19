@@ -66,13 +66,21 @@ interface ContactInfo {
   id: string;
   email: string;
   phone?: string;
+  phone_enabled?: boolean;
   location?: string;
+  location_enabled?: boolean;
   linkedin_url?: string;
+  linkedin_url_enabled?: boolean;
   github_url?: string;
+  github_url_enabled?: boolean;
   twitter_url?: string;
+  twitter_url_enabled?: boolean;
   instagram_url?: string;
+  instagram_url_enabled?: boolean;
   whatsapp_url?: string;
+  whatsapp_url_enabled?: boolean;
   telegram_url?: string;
+  telegram_url_enabled?: boolean;
   updated_at: string;
 }
 
@@ -285,13 +293,21 @@ const Home = () => {
             id: CONTACT_INFO_SINGLETON_ID,
             email: "johndoe@example.com",
             phone: "+1 (123) 456-7890",
+            phone_enabled: true,
             location: "Anytown, USA",
+            location_enabled: true,
             linkedin_url: "#",
+            linkedin_url_enabled: true,
             github_url: "#",
+            github_url_enabled: true,
             twitter_url: "#",
+            twitter_url_enabled: true,
             instagram_url: "#",
+            instagram_url_enabled: true,
             whatsapp_url: "#",
+            whatsapp_url_enabled: true,
             telegram_url: "#",
+            telegram_url_enabled: true,
             updated_at: new Date().toISOString(),
           };
         }
@@ -610,49 +626,49 @@ const Home = () => {
                         <a href={`mailto:${contactInfo.email}`} className="hover:text-primary transition-colors">{contactInfo.email}</a>
                       </div>
                     )}
-                    {contactInfo?.phone && (
+                    {contactInfo?.phone_enabled && contactInfo?.phone && (
                       <div className="flex items-center gap-3">
                         <Phone className="h-6 w-6 text-primary" />
                         <a href={`tel:${contactInfo.phone}`} className="hover:text-primary transition-colors">{contactInfo.phone}</a>
                       </div>
                     )}
-                    {contactInfo?.location && (
+                    {contactInfo?.location_enabled && contactInfo?.location && (
                       <div className="flex items-center gap-3">
                         <MapPin className="h-6 w-6 text-primary" />
                         <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contactInfo.location)}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">{contactInfo.location}</a>
                       </div>
                     )}
-                    {contactInfo?.linkedin_url && (
+                    {contactInfo?.linkedin_url_enabled && contactInfo?.linkedin_url && (
                       <div className="flex items-center gap-3">
                         <Linkedin className="h-6 w-6 text-primary" />
                         <a href={contactInfo.linkedin_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">LinkedIn</a>
                       </div>
                     )}
-                    {contactInfo?.github_url && (
+                    {contactInfo?.github_url_enabled && contactInfo?.github_url && (
                       <div className="flex items-center gap-3">
                         <Github className="h-6 w-6 text-primary" />
                         <a href={contactInfo.github_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a>
                       </div>
                     )}
-                    {contactInfo?.twitter_url && (
+                    {contactInfo?.twitter_url_enabled && contactInfo?.twitter_url && (
                       <div className="flex items-center gap-3">
                         <Twitter className="h-6 w-6 text-primary" />
                         <a href={contactInfo.twitter_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Twitter</a>
                       </div>
                     )}
-                    {contactInfo?.instagram_url && (
+                    {contactInfo?.instagram_url_enabled && contactInfo?.instagram_url && (
                       <div className="flex items-center gap-3">
                         <Instagram className="h-6 w-6 text-primary" />
                         <a href={contactInfo.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a>
                       </div>
                     )}
-                    {contactInfo?.whatsapp_url && (
+                    {contactInfo?.whatsapp_url_enabled && contactInfo?.whatsapp_url && (
                       <div className="flex items-center gap-3">
                         <Phone className="h-6 w-6 text-primary" /> {/* Reusing Phone icon for WhatsApp */}
                         <a href={contactInfo.whatsapp_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">WhatsApp</a>
                       </div>
                     )}
-                    {contactInfo?.telegram_url && (
+                    {contactInfo?.telegram_url_enabled && contactInfo?.telegram_url && (
                       <div className="flex items-center gap-3">
                         <Send className="h-6 w-6 text-primary" /> {/* Reusing Send icon for Telegram */}
                         <a href={contactInfo.telegram_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Telegram</a>
