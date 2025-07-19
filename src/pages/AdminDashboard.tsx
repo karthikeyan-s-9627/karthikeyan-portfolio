@@ -108,7 +108,7 @@ const AdminDashboard: React.FC = () => {
             Dashboard <span className="text-primary">Overview</span>
           </h1>
           <Card className="bg-card shadow-lg border border-border/50 mt-8">
-            <CardContent className="p-6">
+            <CardContent className="p-6 max-h-[calc(100vh-180px)] overflow-y-auto">
               {renderManagementComponent()}
             </CardContent>
           </Card>
