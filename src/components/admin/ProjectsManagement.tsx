@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
@@ -24,7 +24,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud, Link } from "lucide-react";
+import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud, Link, Image } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DndContext,
@@ -111,7 +111,8 @@ const ProjectsManagement: React.FC = () => {
   const [techInput, setTechInput] = React.useState("");
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload'>('url');
+  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload' | 'local'>('url'); // Added 'local'
+  const [localImageFileName, setLocalImageFileName] = React.useState(""); // For local path input
   const [isImageEditorOpen, setIsImageEditorOpen] = React.useState(false);
 
   const { data: projects, isLoading, error } = useQuery<Project[], Error>({
@@ -160,8 +161,16 @@ const ProjectsManagement: React.FC = () => {
       setSelectedFile(null);
       if(fileInputRef.current) fileInputRef.current.value = "";
       setImageSourceType('url');
+      setLocalImageFileName(""); // Clear local filename
     }
   }, [isDialogOpen]);
+
+  // Effect to update newProject.image when localImageFileName changes
+  React.useEffect(() => {
+    if (imageSourceType === 'local') {
+      setNewProject(prev => ({ ...prev, image: localImageFileName ? `/images/${localImageFileName}` : "" }));
+    }
+  }, [localImageFileName, imageSourceType]);
 
   const addProjectMutation = useMutation({
     mutationFn: async (project: Omit<Project, "position">) => {
@@ -200,7 +209,7 @@ const ProjectsManagement: React.FC = () => {
   const deleteProjectMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (id) => {
       const projectToDelete = displayProjects.find(p => p.id === id);
-      if (projectToDelete?.image && projectToDelete.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+      if (projectToDelete?.image && projectToDelete.image.startsWith('http') && projectToDelete.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
         const fileName = projectToDelete.image.split('/').pop();
         if (fileName) {
           const { error: deleteError } = await supabase.storage
@@ -228,7 +237,8 @@ const ProjectsManagement: React.FC = () => {
       const projectToUpdate = displayProjects.find(p => p.id === projectId);
       if (!projectToUpdate) throw new Error("Project not found.");
 
-      if (projectToUpdate.image && projectToUpdate.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+      // If it's a Supabase Storage URL, delete from storage
+      if (projectToUpdate.image && projectToUpdate.image.startsWith('http') && projectToUpdate.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
         const fileName = projectToUpdate.image.split('/').pop();
         if (fileName) {
           const { error: deleteError } = await supabase.storage
@@ -237,7 +247,7 @@ const ProjectsManagement: React.FC = () => {
           if (deleteError) throw deleteError;
         }
       }
-      // Update the project record to set image to null
+      // Update the project record to set image to null regardless of source
       const { error: updateError } = await supabase.from("projects").update({ image: null, title: projectToUpdate.title, description: projectToUpdate.description, technologies: projectToUpdate.technologies, github_link: projectToUpdate.github_link, live_link: projectToUpdate.live_link }).eq("id", projectId);
       if (updateError) throw updateError;
       return null;
@@ -246,6 +256,7 @@ const ProjectsManagement: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       showSuccess("Project image deleted successfully!");
       setNewProject(prev => ({ ...prev, image: "" })); // Clear image in form state
+      setLocalImageFileName(""); // Clear local filename
       setIsImageEditorOpen(false);
     },
     onError: (err) => {
@@ -329,7 +340,15 @@ const ProjectsManagement: React.FC = () => {
     setNewProject({
       id: project.id, title: project.title, description: project.description, technologies: project.technologies || [], github_link: project.github_link || "", live_link: project.live_link || "", image: project.image || "",
     });
-    setImageSourceType(project.image ? 'url' : 'upload');
+    // Determine image source type based on fetched URL
+    if (project.image?.startsWith('/images/')) {
+      setImageSourceType('local');
+      setLocalImageFileName(project.image.replace('/images/', ''));
+    } else if (project.image?.startsWith('http')) {
+      setImageSourceType('url');
+    } else {
+      setImageSourceType('upload');
+    }
     setIsDialogOpen(true);
   };
 
@@ -338,7 +357,8 @@ const ProjectsManagement: React.FC = () => {
     setNewProject({
       id: crypto.randomUUID(), title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
     });
-    setImageSourceType('upload');
+    setImageSourceType('upload'); // Default to upload for new projects
+    setLocalImageFileName("");
     setIsDialogOpen(true);
   };
 
@@ -359,6 +379,11 @@ const ProjectsManagement: React.FC = () => {
   };
 
   const handleImageEditorSave = (croppedBlob: Blob) => {
+    // Only allow editing if it's not a local image
+    if (imageSourceType === 'local') {
+      showError("Local assets cannot be edited directly. Please upload to Supabase to enable editing.");
+      return;
+    }
     if (newProject.id) {
       const croppedFile = new File([croppedBlob], `${newProject.id}-project-cropped.jpeg`, { type: "image/jpeg" });
       uploadFileMutation.mutate({ file: croppedFile, projectId: newProject.id });
@@ -423,19 +448,40 @@ const ProjectsManagement: React.FC = () => {
                 <div className="col-span-3">
                   <RadioGroup
                     value={imageSourceType}
-                    onValueChange={(value: 'url' | 'upload') => setImageSourceType(value)}
+                    onValueChange={(value: 'url' | 'upload' | 'local') => {
+                      setImageSourceType(value);
+                      // Clear other inputs when changing source type
+                      if (value === 'url') {
+                        setLocalImageFileName("");
+                        setSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      } else if (value === 'upload') {
+                        setLocalImageFileName("");
+                        if (!newProject.image?.startsWith('http')) setNewProject(prev => ({ ...prev, image: "" }));
+                      } else if (value === 'local') {
+                        setSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                        if (!newProject.image?.startsWith('/images/')) setNewProject(prev => ({ ...prev, image: "" }));
+                      }
+                    }}
                     className="flex space-x-4"
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="url" id="project-image-source-url" />
                       <Label htmlFor="project-image-source-url" className="flex items-center gap-1">
-                        <Link className="h-4 w-4" /> URL
+                        <Link className="h-4 w-4" /> External URL
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="upload" id="project-image-source-upload" />
                       <Label htmlFor="project-image-source-upload" className="flex items-center gap-1">
-                        <UploadCloud className="h-4 w-4" /> Upload
+                        <UploadCloud className="h-4 w-4" /> Upload to Supabase
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="local" id="project-image-source-local" />
+                      <Label htmlFor="project-image-source-local" className="flex items-center gap-1">
+                        <Image className="h-4 w-4" /> Local Asset
                       </Label>
                     </div>
                   </RadioGroup>
@@ -445,16 +491,28 @@ const ProjectsManagement: React.FC = () => {
                       <Label>Current Image Preview</Label>
                       <img src={newProject.image} alt="Project preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
                       <div className="flex gap-2 mt-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsImageEditorOpen(true)}
+                          disabled={imageSourceType === 'local'} // Disable edit for local assets
+                        >
                           <Edit className="mr-2 h-4 w-4" /> Edit Image
                         </Button>
-                        <Button type="button" variant="destructive" size="sm" onClick={() => deleteProjectImageMutation.mutate(newProject.id)} disabled={deleteProjectImageMutation.isPending}>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleImageEditorDelete}
+                          disabled={deleteProjectImageMutation.isPending}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" /> Delete Image
                         </Button>
                       </div>
                     </div>
                   )}
-                  {imageSourceType === 'url' ? (
+                  {imageSourceType === 'url' && (
                     <div className="mt-4">
                       <Label htmlFor="projectImageUrl">Image URL</Label>
                       <Input
@@ -465,7 +523,8 @@ const ProjectsManagement: React.FC = () => {
                         className="mt-1 bg-input/50 border-border/50 focus:border-primary"
                       />
                     </div>
-                  ) : (
+                  )}
+                  {imageSourceType === 'upload' && (
                     <div className="mt-4">
                       <Label htmlFor="projectImageFile">Upload Image</Label>
                       <div className="mt-2 flex items-center gap-4">
@@ -486,6 +545,24 @@ const ProjectsManagement: React.FC = () => {
                           {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
                         </Button>
                       </div>
+                    </div>
+                  )}
+                  {imageSourceType === 'local' && (
+                    <div className="mt-4">
+                      <Label htmlFor="localImageFileName">Local Asset Path</Label>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-muted-foreground">/images/</span>
+                        <Input
+                          id="localImageFileName"
+                          value={localImageFileName}
+                          onChange={(e) => setLocalImageFileName(e.target.value)}
+                          placeholder="my-project-image.jpg"
+                          className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Place your image file in the `public/images/` folder of your project.
+                      </p>
                     </div>
                   )}
                 </div>

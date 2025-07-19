@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
@@ -34,12 +34,13 @@ const HeroManagement: React.FC = () => {
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
   const [tagline, setTagline] = React.useState("");
-  const [heroImageUrl, setHeroImageUrl] = React.useState("");
+  const [heroImageUrl, setHeroImageUrl] = React.useState(""); // This will hold the final URL or path
+  const [localImageFileName, setLocalImageFileName] = React.useState(""); // For local path input
   const [userId, setUserId] = React.useState<string | null>(null);
   const [userEmail, setUserEmail] = React.useState<string | null>(null);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload'>('url');
+  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload' | 'local'>('url'); // Added 'local'
   const [isImageEditorOpen, setIsImageEditorOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -81,10 +82,28 @@ const HeroManagement: React.FC = () => {
       setFirstName(profile.first_name ?? DEFAULT_HERO_PROFILE.first_name);
       setLastName(profile.last_name ?? DEFAULT_HERO_PROFILE.last_name);
       setTagline(profile.tagline ?? DEFAULT_HERO_PROFILE.tagline);
-      setHeroImageUrl(profile.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url);
-      setImageSourceType(profile.hero_image_url ? 'url' : 'upload');
+      
+      const fetchedHeroImageUrl = profile.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url;
+      setHeroImageUrl(fetchedHeroImageUrl);
+
+      // Determine image source type based on fetched URL
+      if (fetchedHeroImageUrl.startsWith('/images/')) {
+        setImageSourceType('local');
+        setLocalImageFileName(fetchedHeroImageUrl.replace('/images/', ''));
+      } else if (fetchedHeroImageUrl.startsWith('http')) {
+        setImageSourceType('url');
+      } else { // Fallback for empty or other cases, default to upload
+        setImageSourceType('upload');
+      }
     }
   }, [profile]);
+
+  // Effect to update heroImageUrl when localImageFileName changes
+  React.useEffect(() => {
+    if (imageSourceType === 'local') {
+      setHeroImageUrl(localImageFileName ? `/images/${localImageFileName}` : "");
+    }
+  }, [localImageFileName, imageSourceType]);
 
   const updateProfileMutation = useMutation<null, Error, Partial<Profile> & { email?: string }, unknown>({
     mutationFn: async (profileData) => {
@@ -170,6 +189,17 @@ const HeroManagement: React.FC = () => {
 
   const deleteImageMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (filePath) => {
+      // If it's a local path, just clear the database entry
+      if (filePath.startsWith('/images/')) {
+        await updateProfileMutation.mutateAsync({
+          first_name: firstName,
+          last_name: lastName,
+          tagline: tagline,
+          hero_image_url: null,
+        });
+        return null;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("User not authenticated.");
 
@@ -207,6 +237,7 @@ const HeroManagement: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["profile", userId] });
       showSuccess("Image deleted successfully!");
       setHeroImageUrl("");
+      setLocalImageFileName(""); // Clear local filename too
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setIsImageEditorOpen(false);
@@ -222,7 +253,7 @@ const HeroManagement: React.FC = () => {
       first_name: firstName,
       last_name: lastName,
       tagline: tagline,
-      hero_image_url: heroImageUrl,
+      hero_image_url: heroImageUrl, // Use heroImageUrl directly
     });
   };
 
@@ -243,6 +274,11 @@ const HeroManagement: React.FC = () => {
   };
 
   const handleImageEditorSave = (croppedBlob: Blob) => {
+    // Only allow editing if it's not a local image
+    if (imageSourceType === 'local') {
+      showError("Local assets cannot be edited directly. Please upload to Supabase to enable editing.");
+      return;
+    }
     const croppedFile = new File([croppedBlob], `${userId}-hero-cropped.jpeg`, { type: "image/jpeg" });
     uploadFileMutation.mutate(croppedFile);
   };
@@ -299,19 +335,40 @@ const HeroManagement: React.FC = () => {
               <Label>Hero Image Source</Label>
               <RadioGroup
                 value={imageSourceType}
-                onValueChange={(value: 'url' | 'upload') => setImageSourceType(value)}
+                onValueChange={(value: 'url' | 'upload' | 'local') => {
+                  setImageSourceType(value);
+                  // Clear other inputs when changing source type
+                  if (value === 'url') {
+                    setLocalImageFileName("");
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  } else if (value === 'upload') {
+                    setLocalImageFileName("");
+                    if (!heroImageUrl.startsWith('http')) setHeroImageUrl("");
+                  } else if (value === 'local') {
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                    if (!heroImageUrl.startsWith('/images/')) setHeroImageUrl("");
+                  }
+                }}
                 className="flex space-x-4 mt-2"
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="url" id="hero-image-source-url" />
                   <Label htmlFor="hero-image-source-url" className="flex items-center gap-1">
-                    <Link className="h-4 w-4" /> URL
+                    <Link className="h-4 w-4" /> External URL
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="upload" id="hero-image-source-upload" />
                   <Label htmlFor="hero-image-source-upload" className="flex items-center gap-1">
-                    <UploadCloud className="h-4 w-4" /> Upload
+                    <UploadCloud className="h-4 w-4" /> Upload to Supabase
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="local" id="hero-image-source-local" />
+                  <Label htmlFor="hero-image-source-local" className="flex items-center gap-1">
+                    <Image className="h-4 w-4" /> Local Asset
                   </Label>
                 </div>
               </RadioGroup>
@@ -321,16 +378,28 @@ const HeroManagement: React.FC = () => {
                   <Label>Current Hero Image Preview</Label>
                   <img src={heroImageUrl} alt="Hero preview" className="rounded-full w-48 h-48 object-cover border border-border/50" />
                   <div className="flex gap-2 mt-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsImageEditorOpen(true)}
+                      disabled={imageSourceType === 'local'} // Disable edit for local assets
+                    >
                       <Edit className="mr-2 h-4 w-4" /> Edit Image
                     </Button>
-                    <Button type="button" variant="destructive" size="sm" onClick={() => deleteImageMutation.mutate(heroImageUrl)} disabled={deleteImageMutation.isPending}>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleImageEditorDelete}
+                      disabled={deleteImageMutation.isPending}
+                    >
                       <Trash2 className="mr-2 h-4 w-4" /> Delete Image
                     </Button>
                   </div>
                 </div>
               )}
-              {imageSourceType === 'url' ? (
+              {imageSourceType === 'url' && (
                 <div className="mt-4">
                   <Label htmlFor="heroImageUrl">Hero Image URL</Label>
                   <Input
@@ -341,7 +410,8 @@ const HeroManagement: React.FC = () => {
                     className="mt-1 bg-input/50 border-border/50 focus:border-primary"
                   />
                 </div>
-              ) : (
+              )}
+              {imageSourceType === 'upload' && (
                 <div className="mt-4">
                   <Label htmlFor="heroImageFile">Upload Hero Image</Label>
                   <div className="mt-2 flex items-center gap-4">
@@ -362,6 +432,24 @@ const HeroManagement: React.FC = () => {
                       {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
                     </Button>
                   </div>
+                </div>
+              )}
+              {imageSourceType === 'local' && (
+                <div className="mt-4">
+                  <Label htmlFor="localImageFileName">Local Asset Path</Label>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-muted-foreground">/images/</span>
+                    <Input
+                      id="localImageFileName"
+                      value={localImageFileName}
+                      onChange={(e) => setLocalImageFileName(e.target.value)}
+                      placeholder="my-hero-image.jpg"
+                      className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Place your image file in the `public/images/` folder of your project.
+                  </p>
                 </div>
               )}
             </div>

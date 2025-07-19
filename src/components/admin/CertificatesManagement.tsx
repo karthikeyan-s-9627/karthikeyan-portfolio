@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
@@ -24,7 +24,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud, Link } from "lucide-react";
+import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud, Link, Image } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -104,7 +104,8 @@ const CertificatesManagement: React.FC = () => {
   const [editingCertificate, setEditingCertificate] = React.useState<Certificate | null>(null);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload'>('url');
+  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload' | 'local'>('url'); // Added 'local'
+  const [localImageFileName, setLocalImageFileName] = React.useState(""); // For local path input
   const [isImageEditorOpen, setIsImageEditorOpen] = React.useState(false);
 
   const { data: certificates, isLoading, error } = useQuery<Certificate[], Error>({
@@ -152,8 +153,16 @@ const CertificatesManagement: React.FC = () => {
       setSelectedFile(null);
       if(fileInputRef.current) fileInputRef.current.value = "";
       setImageSourceType('url');
+      setLocalImageFileName(""); // Clear local filename
     }
   }, [isDialogOpen]);
+
+  // Effect to update newCertificate.image when localImageFileName changes
+  React.useEffect(() => {
+    if (imageSourceType === 'local') {
+      setNewCertificate(prev => ({ ...prev, image: localImageFileName ? `/images/${localImageFileName}` : "" }));
+    }
+  }, [localImageFileName, imageSourceType]);
 
   const addCertificateMutation = useMutation({
     mutationFn: async (certificate: Omit<Certificate, "id">) => {
@@ -192,7 +201,7 @@ const CertificatesManagement: React.FC = () => {
   const deleteCertificateMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (id) => {
       const certificateToDelete = displayCertificates.find(c => c.id === id);
-      if (certificateToDelete?.image && certificateToDelete.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+      if (certificateToDelete?.image && certificateToDelete.image.startsWith('http') && certificateToDelete.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
         const fileName = certificateToDelete.image.split('/').pop();
         if (fileName) {
           const { error: deleteError } = await supabase.storage
@@ -220,7 +229,8 @@ const CertificatesManagement: React.FC = () => {
       const certificateToUpdate = displayCertificates.find(c => c.id === certificateId);
       if (!certificateToUpdate) throw new Error("Certificate not found.");
 
-      if (certificateToUpdate.image && certificateToUpdate.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+      // If it's a Supabase Storage URL, delete from storage
+      if (certificateToUpdate.image && certificateToUpdate.image.startsWith('http') && certificateToUpdate.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
         const fileName = certificateToUpdate.image.split('/').pop();
         if (fileName) {
           const { error: deleteError } = await supabase.storage
@@ -229,7 +239,7 @@ const CertificatesManagement: React.FC = () => {
           if (deleteError) throw deleteError;
         }
       }
-      // Update the certificate record to set image to null
+      // Update the certificate record to set image to null regardless of source
       const { error: updateError } = await supabase.from("certificates").update({ image: null, title: certificateToUpdate.title, issuer: certificateToUpdate.issuer, date: certificateToUpdate.date, description: certificateToUpdate.description, link: certificateToUpdate.link }).eq("id", certificateId);
       if (updateError) throw updateError;
       return null;
@@ -238,6 +248,7 @@ const CertificatesManagement: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
       showSuccess("Certificate image deleted successfully!");
       setNewCertificate(prev => ({ ...prev, image: "" })); // Clear image in form state
+      setLocalImageFileName(""); // Clear local filename
       setIsImageEditorOpen(false);
     },
     onError: (err) => {
@@ -310,7 +321,15 @@ const CertificatesManagement: React.FC = () => {
     setNewCertificate({
       id: certificate.id, title: certificate.title, issuer: certificate.issuer, date: certificate.date, description: certificate.description, link: certificate.link || "", image: certificate.image || "",
     });
-    setImageSourceType(certificate.image ? 'url' : 'upload');
+    // Determine image source type based on fetched URL
+    if (certificate.image?.startsWith('/images/')) {
+      setImageSourceType('local');
+      setLocalImageFileName(certificate.image.replace('/images/', ''));
+    } else if (certificate.image?.startsWith('http')) {
+      setImageSourceType('url');
+    } else {
+      setImageSourceType('upload');
+    }
     setIsDialogOpen(true);
   };
 
@@ -319,7 +338,8 @@ const CertificatesManagement: React.FC = () => {
     setNewCertificate({
       id: crypto.randomUUID(), title: "", issuer: "", date: "", description: "", link: "", image: "",
     });
-    setImageSourceType('upload');
+    setImageSourceType('upload'); // Default to upload for new certificates
+    setLocalImageFileName("");
     setIsDialogOpen(true);
   };
 
@@ -340,6 +360,11 @@ const CertificatesManagement: React.FC = () => {
   };
 
   const handleImageEditorSave = (croppedBlob: Blob) => {
+    // Only allow editing if it's not a local image
+    if (imageSourceType === 'local') {
+      showError("Local assets cannot be edited directly. Please upload to Supabase to enable editing.");
+      return;
+    }
     if (newCertificate.id) {
       const croppedFile = new File([croppedBlob], `${newCertificate.id}-certificate-cropped.jpeg`, { type: "image/jpeg" });
       uploadFileMutation.mutate({ file: croppedFile, certificateId: newCertificate.id });
@@ -395,19 +420,40 @@ const CertificatesManagement: React.FC = () => {
                 <div className="col-span-3">
                   <RadioGroup
                     value={imageSourceType}
-                    onValueChange={(value: 'url' | 'upload') => setImageSourceType(value)}
+                    onValueChange={(value: 'url' | 'upload' | 'local') => {
+                      setImageSourceType(value);
+                      // Clear other inputs when changing source type
+                      if (value === 'url') {
+                        setLocalImageFileName("");
+                        setSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      } else if (value === 'upload') {
+                        setLocalImageFileName("");
+                        if (!newCertificate.image?.startsWith('http')) setNewCertificate(prev => ({ ...prev, image: "" }));
+                      } else if (value === 'local') {
+                        setSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                        if (!newCertificate.image?.startsWith('/images/')) setNewCertificate(prev => ({ ...prev, image: "" }));
+                      }
+                    }}
                     className="flex space-x-4"
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="url" id="cert-image-source-url" />
                       <Label htmlFor="cert-image-source-url" className="flex items-center gap-1">
-                        <Link className="h-4 w-4" /> URL
+                        <Link className="h-4 w-4" /> External URL
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="upload" id="cert-image-source-upload" />
                       <Label htmlFor="cert-image-source-upload" className="flex items-center gap-1">
-                        <UploadCloud className="h-4 w-4" /> Upload
+                        <UploadCloud className="h-4 w-4" /> Upload to Supabase
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="local" id="cert-image-source-local" />
+                      <Label htmlFor="cert-image-source-local" className="flex items-center gap-1">
+                        <Image className="h-4 w-4" /> Local Asset
                       </Label>
                     </div>
                   </RadioGroup>
@@ -417,16 +463,28 @@ const CertificatesManagement: React.FC = () => {
                       <Label>Current Image Preview</Label>
                       <img src={newCertificate.image} alt="Certificate preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
                       <div className="flex gap-2 mt-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsImageEditorOpen(true)}
+                          disabled={imageSourceType === 'local'} // Disable edit for local assets
+                        >
                           <Edit className="mr-2 h-4 w-4" /> Edit Image
                         </Button>
-                        <Button type="button" variant="destructive" size="sm" onClick={() => deleteCertificateImageMutation.mutate(newCertificate.id)} disabled={deleteCertificateImageMutation.isPending}>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleImageEditorDelete}
+                          disabled={deleteCertificateImageMutation.isPending}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" /> Delete Image
                         </Button>
                       </div>
                     </div>
                   )}
-                  {imageSourceType === 'url' ? (
+                  {imageSourceType === 'url' && (
                     <div className="mt-4">
                       <Label htmlFor="certImageUrl">Image URL</Label>
                       <Input
@@ -437,7 +495,8 @@ const CertificatesManagement: React.FC = () => {
                         className="mt-1 bg-input/50 border-border/50 focus:border-primary"
                       />
                     </div>
-                  ) : (
+                  )}
+                  {imageSourceType === 'upload' && (
                     <div className="mt-4">
                       <Label htmlFor="certImageFile">Upload Image</Label>
                       <div className="mt-2 flex items-center gap-4">
@@ -458,6 +517,24 @@ const CertificatesManagement: React.FC = () => {
                           {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
                         </Button>
                       </div>
+                    </div>
+                  )}
+                  {imageSourceType === 'local' && (
+                    <div className="mt-4">
+                      <Label htmlFor="localImageFileName">Local Asset Path</Label>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-muted-foreground">/images/</span>
+                        <Input
+                          id="localImageFileName"
+                          value={localImageFileName}
+                          onChange={(e) => setLocalImageFileName(e.target.value)}
+                          placeholder="my-certificate-image.jpg"
+                          className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Place your image file in the `public/images/` folder of your project.
+                      </p>
                     </div>
                   )}
                 </div>
