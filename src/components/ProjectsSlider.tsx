@@ -23,6 +23,14 @@ const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects }) => {
   // Duplicate projects for a seamless, infinite loop
   const duplicatedProjects = [...projects, ...projects];
 
+  const formatUrl = (url?: string): string => {
+    if (!url) return '#';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `https://${url}`;
+  };
+
   return (
     <div className="w-full overflow-hidden continuous-scroll-container">
       <div className="flex continuous-scroll-content">
@@ -51,14 +59,14 @@ const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects }) => {
                 </div>
                 <div className="flex gap-3 mt-auto">
                   {project.github_link && (
-                    <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="flex-1">
+                    <a href={formatUrl(project.github_link)} target="_blank" rel="noopener noreferrer" className="flex-1">
                       <Button variant="outline" className="w-full">
                         <Github className="mr-2 h-4 w-4" /> View Source
                       </Button>
                     </a>
                   )}
                   {project.live_link && (
-                    <a href={project.live_link} target="_blank" rel="noopener noreferrer" className="flex-1">
+                    <a href={formatUrl(project.live_link)} target="_blank" rel="noopener noreferrer" className="flex-1">
                       <Button className="w-full">
                         <ExternalLink className="mr-2 h-4 w-4" /> Live Link
                       </Button>
