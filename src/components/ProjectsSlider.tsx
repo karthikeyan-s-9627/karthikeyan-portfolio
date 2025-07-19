@@ -4,13 +4,14 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
 import { ExternalLink, Github } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 type Project = {
   title: string;
   description: string;
   technologies: string[];
-  githubLink?: string;
-  liveLink?: string;
+  github_link?: string;
+  live_link?: string;
   image: string;
 };
 
@@ -40,19 +41,26 @@ const ProjectsSlider: React.FC<ProjectsSliderProps> = ({ projects }) => {
                 <div>
                   <CardTitle className="text-2xl font-bold text-primary mb-2">{project.title}</CardTitle>
                   <CardDescription className="text-muted-foreground mb-4">{project.description}</CardDescription>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {project.technologies?.map((tech) => (
+                      <Badge key={tech} variant="secondary" className="px-3 py-1 text-sm rounded-full bg-secondary/80 text-secondary-foreground shadow-md border border-primary/20">
+                        {tech}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex gap-3 mt-auto">
-                  {project.githubLink && (
-                    <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="flex-1">
+                  {project.github_link && (
+                    <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="flex-1">
                       <Button variant="outline" className="w-full">
-                        <Github className="mr-2 h-4 w-4" /> GitHub
+                        <Github className="mr-2 h-4 w-4" /> View Source
                       </Button>
                     </a>
                   )}
-                  {project.liveLink && (
-                    <a href={project.liveLink} target="_blank" rel="noopener noreferrer" className="flex-1">
+                  {project.live_link && (
+                    <a href={project.live_link} target="_blank" rel="noopener noreferrer" className="flex-1">
                       <Button className="w-full">
-                        <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+                        <ExternalLink className="mr-2 h-4 w-4" /> Live Link
                       </Button>
                     </a>
                   )}
