@@ -153,7 +153,7 @@ const CertificatesManagement: React.FC = () => {
       setEditingCertificate(null);
       setNewCertificate({ id: "", title: "", issuer: "", date: "", description: "", link: "", image: "", image_width: "", image_height: "" }); // Reset image dimensions
       setSelectedFile(null);
-      if(fileInputRef.current) fileInputInputRef.current.value = "";
+      if(fileInputRef.current) fileInputRef.current.value = "";
       setImageSourceType('url');
       setLocalImageFileName(""); // Clear local filename
     }
@@ -427,167 +427,169 @@ const CertificatesManagement: React.FC = () => {
           <DialogTrigger asChild><Button onClick={handleOpenNewDialog}><PlusCircle className="mr-2 h-4 w-4" /> Add New Certificate</Button></DialogTrigger>
           <DialogContent className="sm:max-w-[600px] bg-card border-border/50">
             <DialogHeader><DialogTitle>{editingCertificate ? "Edit Certificate" : "Add New Certificate"}</DialogTitle></DialogHeader>
-            <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newCertificate.title} onChange={(e) => setNewCertificate({ ...newCertificate, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="issuer" className="text-right">Issuer</Label><Input id="issuer" value={newCertificate.issuer} onChange={(e) => setNewCertificate({ ...newCertificate, issuer: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="date" className="text-right">Date</Label><Input id="date" value={newCertificate.date} onChange={(e) => setNewCertificate({ ...newCertificate, date: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newCertificate.description} onChange={(e) => setNewCertificate({ ...newCertificate, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="link" className="text-right">Link</Label><Input id="link" value={newCertificate.link} onChange={(e) => setNewCertificate({ ...newCertificate, link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">Image Source</Label>
-                <div className="col-span-3">
-                  <RadioGroup
-                    value={imageSourceType}
-                    onValueChange={(value: 'url' | 'upload' | 'local') => {
-                      setImageSourceType(value);
-                      // Clear other inputs when changing source type
-                      if (value === 'url') {
-                        setLocalImageFileName("");
-                        setSelectedFile(null);
-                        if (fileInputRef.current) fileInputRef.current.value = "";
-                      } else if (value === 'upload') {
-                        setLocalImageFileName("");
-                        if (!newCertificate.image?.startsWith('http')) setNewCertificate(prev => ({ ...prev, image: "" }));
-                      } else if (value === 'local') {
-                        setSelectedFile(null);
-                        if (fileInputRef.current) fileInputRef.current.value = "";
-                        if (!newCertificate.image?.startsWith('/images/')) setNewCertificate(prev => ({ ...prev, image: "" }));
-                      }
-                    }}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="url" id="cert-image-source-url" />
-                      <Label htmlFor="cert-image-source-url" className="flex items-center gap-1">
-                        <Link className="h-4 w-4" /> External URL
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="upload" id="cert-image-source-upload" />
-                      <Label htmlFor="cert-image-source-upload" className="flex items-center gap-1">
-                        <UploadCloud className="h-4 w-4" /> Upload to Supabase
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="local" id="cert-image-source-local" />
-                      <Label htmlFor="cert-image-source-local" className="flex items-center gap-1">
-                        <Image className="h-4 w-4" /> Local Asset
-                      </Label>
-                    </div>
-                  </RadioGroup>
+            <CardContent className="p-6 max-h-[calc(100vh-280px)] overflow-y-auto"> {/* Added max-h and overflow-y-auto */}
+              <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newCertificate.title} onChange={(e) => setNewCertificate({ ...newCertificate, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="issuer" className="text-right">Issuer</Label><Input id="issuer" value={newCertificate.issuer} onChange={(e) => setNewCertificate({ ...newCertificate, issuer: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="date" className="text-right">Date</Label><Input id="date" value={newCertificate.date} onChange={(e) => setNewCertificate({ ...newCertificate, date: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newCertificate.description} onChange={(e) => setNewCertificate({ ...newCertificate, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="link" className="text-right">Link</Label><Input id="link" value={newCertificate.link} onChange={(e) => setNewCertificate({ ...newCertificate, link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+                
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label className="text-right pt-2">Image Source</Label>
+                  <div className="col-span-3">
+                    <RadioGroup
+                      value={imageSourceType}
+                      onValueChange={(value: 'url' | 'upload' | 'local') => {
+                        setImageSourceType(value);
+                        // Clear other inputs when changing source type
+                        if (value === 'url') {
+                          setLocalImageFileName("");
+                          setSelectedFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        } else if (value === 'upload') {
+                          setLocalImageFileName("");
+                          if (!newCertificate.image?.startsWith('http')) setNewCertificate(prev => ({ ...prev, image: "" }));
+                        } else if (value === 'local') {
+                          setSelectedFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                          if (!newCertificate.image?.startsWith('/images/')) setNewCertificate(prev => ({ ...prev, image: "" }));
+                        }
+                      }}
+                      className="flex space-x-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="url" id="cert-image-source-url" />
+                        <Label htmlFor="cert-image-source-url" className="flex items-center gap-1">
+                          <Link className="h-4 w-4" /> External URL
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="upload" id="cert-image-source-upload" />
+                        <Label htmlFor="cert-image-source-upload" className="flex items-center gap-1">
+                          <UploadCloud className="h-4 w-4" /> Upload to Supabase
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="local" id="cert-image-source-local" />
+                        <Label htmlFor="cert-image-source-local" className="flex items-center gap-1">
+                          <Image className="h-4 w-4" /> Local Asset
+                        </Label>
+                      </div>
+                    </RadioGroup>
 
-                  {newCertificate.image && (
-                    <div className="mt-4 flex flex-col items-start gap-2">
-                      <Label>Current Image Preview</Label>
-                      <img src={newCertificate.image} alt="Certificate preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
-                      <div className="flex gap-2 mt-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsImageEditorOpen(true)}
-                          disabled={imageSourceType === 'local'} // Disable edit for local assets
-                        >
-                          <Edit className="mr-2 h-4 w-4" /> Edit Image
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={handleImageEditorDelete}
-                          disabled={deleteCertificateImageMutation.isPending}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Image
-                        </Button>
+                    {newCertificate.image && (
+                      <div className="mt-4 flex flex-col items-start gap-2">
+                        <Label>Current Image Preview</Label>
+                        <img src={newCertificate.image} alt="Certificate preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsImageEditorOpen(true)}
+                            disabled={imageSourceType === 'local'} // Disable edit for local assets
+                          >
+                            <Edit className="mr-2 h-4 w-4" /> Edit Image
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleImageEditorDelete}
+                            disabled={deleteCertificateImageMutation.isPending}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {imageSourceType === 'url' && (
-                    <div className="mt-4">
-                      <Label htmlFor="certImageUrl">Image URL</Label>
-                      <Input
-                        id="certImageUrl"
-                        type="url"
-                        value={newCertificate.image}
-                        onChange={(e) => setNewCertificate({ ...newCertificate, image: e.target.value })}
-                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                      />
-                    </div>
-                  )}
-                  {imageSourceType === 'upload' && (
-                    <div className="mt-4">
-                      <Label htmlFor="certImageFile">Upload Image</Label>
-                      <div className="mt-2 flex items-center gap-4">
+                    )}
+                    {imageSourceType === 'url' && (
+                      <div className="mt-4">
+                        <Label htmlFor="certImageUrl">Image URL</Label>
                         <Input
-                          id="certImageFile"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="flex-grow bg-input/50 border-border/50 focus:border-primary"
-                          ref={fileInputRef}
-                        />
-                        <Button
-                          type="button"
-                          onClick={handleUploadClick}
-                          disabled={uploadFileMutation.isPending || !selectedFile}
-                        >
-                          <UploadCloud className="mr-2 h-4 w-4" />
-                          {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {imageSourceType === 'local' && (
-                    <div className="mt-4">
-                      <Label htmlFor="localImageFileName">Local Asset Path</Label>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-muted-foreground">/images/</span>
-                        <Input
-                          id="localImageFileName"
-                          value={localImageFileName}
-                          onChange={(e) => setLocalImageFileName(e.target.value)}
-                          placeholder="my-certificate-image.jpg"
-                          className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                          id="certImageUrl"
+                          type="url"
+                          value={newCertificate.image}
+                          onChange={(e) => setNewCertificate({ ...newCertificate, image: e.target.value })}
+                          className="mt-1 bg-input/50 border-border/50 focus:border-primary"
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Place your image file in the `public/images/` folder of your project.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {newCertificate.image && ( // Only show size inputs if an image is present
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Image Size</Label>
-                  <div className="col-span-3 grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="imageWidth">Width</Label>
-                      <Input
-                        id="imageWidth"
-                        value={newCertificate.image_width}
-                        onChange={(e) => setNewCertificate({ ...newCertificate, image_width: e.target.value })}
-                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                        placeholder="e.g., 300px"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="imageHeight">Height</Label>
-                      <Input
-                        id="imageHeight"
-                        value={newCertificate.image_height}
-                        onChange={(e) => setNewCertificate({ ...newCertificate, image_height: e.target.value })}
-                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                        placeholder="e.g., 200px"
-                      />
-                    </div>
+                    )}
+                    {imageSourceType === 'upload' && (
+                      <div className="mt-4">
+                        <Label htmlFor="certImageFile">Upload Image</Label>
+                        <div className="mt-2 flex items-center gap-4">
+                          <Input
+                            id="certImageFile"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                            ref={fileInputRef}
+                          />
+                          <Button
+                            type="button"
+                            onClick={handleUploadClick}
+                            disabled={uploadFileMutation.isPending || !selectedFile}
+                          >
+                            <UploadCloud className="mr-2 h-4 w-4" />
+                            {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {imageSourceType === 'local' && (
+                      <div className="mt-4">
+                        <Label htmlFor="localImageFileName">Local Asset Path</Label>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-muted-foreground">/images/</span>
+                          <Input
+                            id="localImageFileName"
+                            value={localImageFileName}
+                            onChange={(e) => setLocalImageFileName(e.target.value)}
+                            placeholder="my-certificate-image.jpg"
+                            className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Place your image file in the `public/images/` folder of your project.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+                {newCertificate.image && ( // Only show size inputs if an image is present
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Image Size</Label>
+                    <div className="col-span-3 grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="imageWidth">Width</Label>
+                        <Input
+                          id="imageWidth"
+                          value={newCertificate.image_width}
+                          onChange={(e) => setNewCertificate({ ...newCertificate, image_width: e.target.value })}
+                          className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                          placeholder="e.g., 300px"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="imageHeight">Height</Label>
+                        <Input
+                          id="imageHeight"
+                          value={newCertificate.image_height}
+                          onChange={(e) => setNewCertificate({ ...newCertificate, image_height: e.target.value })}
+                          className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                          placeholder="e.g., 200px"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              <DialogFooter><Button type="submit" disabled={addCertificateMutation.isPending || updateCertificateMutation.isPending}>{editingCertificate ? (updateCertificateMutation.isPending ? "Saving..." : "Save Changes") : (addCertificateMutation.isPending ? "Adding..." : "Add Certificate")}</Button></DialogFooter>
-            </form>
+                <DialogFooter><Button type="submit" disabled={addCertificateMutation.isPending || updateCertificateMutation.isPending}>{editingCertificate ? (updateCertificateMutation.isPending ? "Saving..." : "Save Changes") : (addCertificateMutation.isPending ? "Adding..." : "Add Certificate")}</Button></DialogFooter>
+              </form>
+            </CardContent>
           </DialogContent>
         </Dialog>
       </div>
