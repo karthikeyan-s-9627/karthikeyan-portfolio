@@ -413,7 +413,7 @@ const Home = () => {
           variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
+          viewport={{ once: false, amount: 0.5 }}
         >
           About <span className="text-primary">Me</span>
         </motion.h1>
@@ -428,7 +428,7 @@ const Home = () => {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
+            viewport={{ once: false, amount: 0.3 }}
           >
             <motion.div variants={cardVariants}>
               <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
@@ -458,7 +458,7 @@ const Home = () => {
           variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
+          viewport={{ once: false, amount: 0.5 }}
         >
           My <span className="text-primary">Skills</span>
         </motion.h1>
@@ -473,7 +473,7 @@ const Home = () => {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
+            viewport={{ once: false, amount: 0.2 }}
           >
             {Object.entries(groupedSkills).map(([category, skillsList], index) => {
               const IconComponent = skillCategoryIcons[category] || Code; // Default to Code icon
@@ -520,7 +520,7 @@ const Home = () => {
           variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
+          viewport={{ once: false, amount: 0.5 }}
         >
           My <span className="text-primary">Certificates</span>
         </motion.h1>
@@ -548,7 +548,7 @@ const Home = () => {
           variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
+          viewport={{ once: false, amount: 0.5 }}
         >
           My <span className="text-primary">Projects</span>
         </motion.h1>
@@ -576,7 +576,7 @@ const Home = () => {
           variants={sectionTitleVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
+          viewport={{ once: false, amount: 0.5 }}
         >
           Get in <span className="text-primary">Touch</span>
         </motion.h1>
@@ -586,7 +586,7 @@ const Home = () => {
             variants={cardVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
+            viewport={{ once: false, amount: 0.3 }}
           >
             <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
               hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-300"
@@ -668,7 +668,7 @@ const Home = () => {
             variants={cardVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
+            viewport={{ once: false, amount: 0.3 }}
           >
             <Card className="h-full bg-card shadow-2xl border border-border/50 rounded-xl overflow-hidden
               hover:shadow-primary/50 hover:scale-[1.01] transition-all duration-300"
