@@ -242,11 +242,11 @@ const SkillsManagement: React.FC = () => {
             <form onSubmit={handleSubmit} className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="category" className="text-right">Category</Label>
-                <Input id="category" value={newSkillCategory} onChange={(e) => setNewSkillCategory(e.target.value)} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required />
+                <Input id="category" value={newSkillCategory} onChange={(e) => setNewSkillCategory(e.target.value)} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">Skill Name</Label>
-                <Input id="name" value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required />
+                <Input id="name" value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" />
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={addSkillMutation.isPending || updateSkillMutation.isPending}>

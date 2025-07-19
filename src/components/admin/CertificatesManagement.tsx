@@ -24,7 +24,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { PlusCircle, Trash2, Edit, GripVertical } from "lucide-react";
+import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -94,11 +94,13 @@ const SortableCertificateRow: React.FC<{ certificate: Certificate; onEdit: (cert
 const CertificatesManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [displayCertificates, setDisplayCertificates] = React.useState<Certificate[]>([]);
-  const [newCertificate, setNewCertificate] = React.useState<Omit<Certificate, "id" | "position">>({
-    title: "", issuer: "", date: "", description: "", link: "", image: "",
+  const [newCertificate, setNewCertificate] = React.useState<Omit<Certificate, "position">>({
+    id: "", title: "", issuer: "", date: "", description: "", link: "", image: "",
   });
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingCertificate, setEditingCertificate] = React.useState<Certificate | null>(null);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { data: certificates, isLoading, error } = useQuery<Certificate[], Error>({
     queryKey: ["certificates"],
@@ -141,7 +143,9 @@ const CertificatesManagement: React.FC = () => {
   React.useEffect(() => {
     if (!isDialogOpen) {
       setEditingCertificate(null);
-      setNewCertificate({ title: "", issuer: "", date: "", description: "", link: "", image: "" });
+      setNewCertificate({ id: "", title: "", issuer: "", date: "", description: "", link: "", image: "" });
+      setSelectedFile(null);
+      if(fileInputRef.current) fileInputRef.current.value = "";
     }
   }, [isDialogOpen]);
 
@@ -194,6 +198,39 @@ const CertificatesManagement: React.FC = () => {
     },
   });
 
+  const uploadFileMutation = useMutation<string, Error, { file: File; certificateId: string }, unknown>({
+    mutationFn: async ({ file, certificateId }) => {
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${certificateId}-certificate.${fileExtension}`;
+      const filePath = `${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("images")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+        throw new Error("Failed to get public URL for the uploaded file.");
+      }
+      
+      setNewCertificate(prev => ({ ...prev, image: publicUrlData.publicUrl }));
+      return publicUrlData.publicUrl;
+    },
+    onSuccess: () => {
+      showSuccess("Image uploaded successfully!");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    onError: (err) => {
+      showError(`Error uploading file: ${err.message}`);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingCertificate) {
@@ -208,9 +245,33 @@ const CertificatesManagement: React.FC = () => {
   const handleEditClick = (certificate: Certificate) => {
     setEditingCertificate(certificate);
     setNewCertificate({
-      title: certificate.title, issuer: certificate.issuer, date: certificate.date, description: certificate.description, link: certificate.link || "", image: certificate.image || "",
+      id: certificate.id, title: certificate.title, issuer: certificate.issuer, date: certificate.date, description: certificate.description, link: certificate.link || "", image: certificate.image || "",
     });
     setIsDialogOpen(true);
+  };
+
+  const handleOpenNewDialog = () => {
+    setEditingCertificate(null);
+    setNewCertificate({
+      id: crypto.randomUUID(), title: "", issuer: "", date: "", description: "", link: "", image: "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    } else {
+      setSelectedFile(null);
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (selectedFile && newCertificate.id) {
+      uploadFileMutation.mutate({ file: selectedFile, certificateId: newCertificate.id });
+    } else {
+      showError("Please select a file to upload.");
+    }
   };
 
   const sensors = useSensors(useSensor(PointerSensor));
@@ -239,16 +300,32 @@ const CertificatesManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-foreground">Manage Certificates</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4" /> Add New Certificate</Button></DialogTrigger>
+          <DialogTrigger asChild><Button onClick={handleOpenNewDialog}><PlusCircle className="mr-2 h-4 w-4" /> Add New Certificate</Button></DialogTrigger>
           <DialogContent className="sm:max-w-[600px] bg-card border-border/50">
             <DialogHeader><DialogTitle>{editingCertificate ? "Edit Certificate" : "Add New Certificate"}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newCertificate.title} onChange={(e) => setNewCertificate({ ...newCertificate, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="issuer" className="text-right">Issuer</Label><Input id="issuer" value={newCertificate.issuer} onChange={(e) => setNewCertificate({ ...newCertificate, issuer: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="date" className="text-right">Date</Label><Input id="date" value={newCertificate.date} onChange={(e) => setNewCertificate({ ...newCertificate, date: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newCertificate.description} onChange={(e) => setNewCertificate({ ...newCertificate, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="link" className="text-right">Link (Optional)</Label><Input id="link" value={newCertificate.link} onChange={(e) => setNewCertificate({ ...newCertificate, link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="image" className="text-right">Image URL (Optional)</Label><Input id="image" value={newCertificate.image} onChange={(e) => setNewCertificate({ ...newCertificate, image: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newCertificate.title} onChange={(e) => setNewCertificate({ ...newCertificate, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="issuer" className="text-right">Issuer</Label><Input id="issuer" value={newCertificate.issuer} onChange={(e) => setNewCertificate({ ...newCertificate, issuer: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="date" className="text-right">Date</Label><Input id="date" value={newCertificate.date} onChange={(e) => setNewCertificate({ ...newCertificate, date: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newCertificate.description} onChange={(e) => setNewCertificate({ ...newCertificate, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="link" className="text-right">Link</Label><Input id="link" value={newCertificate.link} onChange={(e) => setNewCertificate({ ...newCertificate, link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="imageFile" className="text-right pt-2">Image</Label>
+                <div className="col-span-3">
+                  <div className="flex items-center gap-4">
+                    <Input id="imageFile" type="file" accept="image/*" onChange={handleFileChange} className="flex-grow bg-input/50 border-border/50 focus:border-primary" ref={fileInputRef} />
+                    <Button type="button" onClick={handleUploadClick} disabled={uploadFileMutation.isPending || !selectedFile}>
+                      <UploadCloud className="mr-2 h-4 w-4" />
+                      {uploadFileMutation.isPending ? "..." : "Upload"}
+                    </Button>
+                  </div>
+                  {newCertificate.image && (
+                    <div className="mt-2">
+                      <img src={newCertificate.image} alt="Certificate preview" className="rounded-md w-32 h-32 object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
               <DialogFooter><Button type="submit" disabled={addCertificateMutation.isPending || updateCertificateMutation.isPending}>{editingCertificate ? (updateCertificateMutation.isPending ? "Saving..." : "Save Changes") : (addCertificateMutation.isPending ? "Adding..." : "Add Certificate")}</Button></DialogFooter>
             </form>
           </DialogContent>

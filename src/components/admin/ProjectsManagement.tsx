@@ -24,7 +24,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { PlusCircle, Trash2, Edit, GripVertical } from "lucide-react";
+import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DndContext,
@@ -100,12 +100,14 @@ const SortableProjectRow: React.FC<{ project: Project; onEdit: (proj: Project) =
 const ProjectsManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [displayProjects, setDisplayProjects] = React.useState<Project[]>([]);
-  const [newProject, setNewProject] = React.useState<Omit<Project, "id" | "position">>({
-    title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
+  const [newProject, setNewProject] = React.useState<Omit<Project, "position">>({
+    id: "", title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
   });
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingProject, setEditingProject] = React.useState<Project | null>(null);
   const [techInput, setTechInput] = React.useState("");
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { data: projects, isLoading, error } = useQuery<Project[], Error>({
     queryKey: ["projects"],
@@ -148,13 +150,15 @@ const ProjectsManagement: React.FC = () => {
   React.useEffect(() => {
     if (!isDialogOpen) {
       setEditingProject(null);
-      setNewProject({ title: "", description: "", technologies: [], github_link: "", live_link: "", image: "" });
+      setNewProject({ id: "", title: "", description: "", technologies: [], github_link: "", live_link: "", image: "" });
       setTechInput("");
+      setSelectedFile(null);
+      if(fileInputRef.current) fileInputRef.current.value = "";
     }
   }, [isDialogOpen]);
 
   const addProjectMutation = useMutation({
-    mutationFn: async (project: Omit<Project, "id">) => {
+    mutationFn: async (project: Omit<Project, "position">) => {
       const { data, error } = await supabase.from("projects").insert(project).select();
       if (error) throw error;
       return data;
@@ -202,6 +206,39 @@ const ProjectsManagement: React.FC = () => {
     },
   });
 
+  const uploadFileMutation = useMutation<string, Error, { file: File; projectId: string }, unknown>({
+    mutationFn: async ({ file, projectId }) => {
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${projectId}-project.${fileExtension}`;
+      const filePath = `${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("images")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+        throw new Error("Failed to get public URL for the uploaded file.");
+      }
+      
+      setNewProject(prev => ({ ...prev, image: publicUrlData.publicUrl }));
+      return publicUrlData.publicUrl;
+    },
+    onSuccess: () => {
+      showSuccess("Image uploaded successfully!");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    onError: (err) => {
+      showError(`Error uploading file: ${err.message}`);
+    },
+  });
+
   const handleAddTechnology = () => {
     if (techInput.trim() && !newProject.technologies.includes(techInput.trim())) {
       setNewProject({ ...newProject, technologies: [...newProject.technologies, techInput.trim()] });
@@ -227,9 +264,33 @@ const ProjectsManagement: React.FC = () => {
   const handleEditClick = (project: Project) => {
     setEditingProject(project);
     setNewProject({
-      title: project.title, description: project.description, technologies: project.technologies || [], github_link: project.github_link || "", live_link: project.live_link || "", image: project.image || "",
+      id: project.id, title: project.title, description: project.description, technologies: project.technologies || [], github_link: project.github_link || "", live_link: project.live_link || "", image: project.image || "",
     });
     setIsDialogOpen(true);
+  };
+
+  const handleOpenNewDialog = () => {
+    setEditingProject(null);
+    setNewProject({
+      id: crypto.randomUUID(), title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    } else {
+      setSelectedFile(null);
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (selectedFile && newProject.id) {
+      uploadFileMutation.mutate({ file: selectedFile, projectId: newProject.id });
+    } else {
+      showError("Please select a file to upload.");
+    }
   };
 
   const sensors = useSensors(useSensor(PointerSensor));
@@ -258,12 +319,12 @@ const ProjectsManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-foreground">Manage Projects</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4" /> Add New Project</Button></DialogTrigger>
+          <DialogTrigger asChild><Button onClick={handleOpenNewDialog}><PlusCircle className="mr-2 h-4 w-4" /> Add New Project</Button></DialogTrigger>
           <DialogContent className="sm:max-w-[600px] bg-card border-border/50">
             <DialogHeader><DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" required /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="technologies" className="text-right">Technologies</Label>
                 <div className="col-span-3 flex flex-col gap-2">
@@ -274,9 +335,25 @@ const ProjectsManagement: React.FC = () => {
                   <div className="flex flex-wrap gap-2">{newProject.technologies.map((tech, index) => (<Badge key={index} variant="secondary" className="flex items-center gap-1">{tech}<Button type="button" variant="ghost" size="sm" className="h-auto p-0.5" onClick={() => handleRemoveTechnology(tech)}>&times;</Button></Badge>))}</div>
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="github_link" className="text-right">GitHub Link (Optional)</Label><Input id="github_link" value={newProject.github_link} onChange={(e) => setNewProject({ ...newProject, github_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="live_link" className="text-right">Live Link (Optional)</Label><Input id="live_link" value={newProject.live_link} onChange={(e) => setNewProject({ ...newProject, live_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="image" className="text-right">Image URL (Optional)</Label><Input id="image" value={newProject.image} onChange={(e) => setNewProject({ ...newProject, image: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="github_link" className="text-right">GitHub Link</Label><Input id="github_link" value={newProject.github_link} onChange={(e) => setNewProject({ ...newProject, github_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="live_link" className="text-right">Live Link</Label><Input id="live_link" value={newProject.live_link} onChange={(e) => setNewProject({ ...newProject, live_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="imageFile" className="text-right pt-2">Image</Label>
+                <div className="col-span-3">
+                  <div className="flex items-center gap-4">
+                    <Input id="imageFile" type="file" accept="image/*" onChange={handleFileChange} className="flex-grow bg-input/50 border-border/50 focus:border-primary" ref={fileInputRef} />
+                    <Button type="button" onClick={handleUploadClick} disabled={uploadFileMutation.isPending || !selectedFile}>
+                      <UploadCloud className="mr-2 h-4 w-4" />
+                      {uploadFileMutation.isPending ? "..." : "Upload"}
+                    </Button>
+                  </div>
+                  {newProject.image && (
+                    <div className="mt-2">
+                      <img src={newProject.image} alt="Project preview" className="rounded-md w-32 h-32 object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
               <DialogFooter><Button type="submit" disabled={addProjectMutation.isPending || updateProjectMutation.isPending}>{editingProject ? (updateProjectMutation.isPending ? "Saving..." : "Save Changes") : (addProjectMutation.isPending ? "Adding..." : "Add Project")}</Button></DialogFooter>
             </form>
           </DialogContent>

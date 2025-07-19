@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, UploadCloud } from "lucide-react";
 
 interface AboutMeContent {
   id: string;
@@ -29,6 +29,8 @@ const AboutMeManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [content, setContent] = React.useState("");
   const [imageUrl, setImageUrl] = React.useState("");
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { data, isLoading, error } = useQuery<AboutMeContent, Error>({
     queryKey: ["about_me"],
@@ -59,11 +61,11 @@ const AboutMeManagement: React.FC = () => {
     }
   }, [data]);
 
-  const upsertAboutMeMutation = useMutation<null, Error, Omit<AboutMeContent, "updated_at">, unknown>({
+  const upsertAboutMeMutation = useMutation<null, Error, Partial<Omit<AboutMeContent, "updated_at">>, unknown>({
     mutationFn: async (aboutMeData) => {
       const { error } = await supabase
         .from("about_me")
-        .upsert({ id: ABOUT_ME_SINGLETON_ID, content: aboutMeData.content, image_url: aboutMeData.image_url })
+        .upsert({ id: ABOUT_ME_SINGLETON_ID, ...aboutMeData })
         .eq("id", ABOUT_ME_SINGLETON_ID);
       if (error) throw error;
       return null;
@@ -77,9 +79,62 @@ const AboutMeManagement: React.FC = () => {
     },
   });
 
+  const uploadFileMutation = useMutation<string, Error, File, unknown>({
+    mutationFn: async (file) => {
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${ABOUT_ME_SINGLETON_ID}-about.${fileExtension}`;
+      const filePath = `${fileName}`; // Bucket is now public, no need for 'public/' prefix if policies are set on bucket
+      
+      const { error: uploadError } = await supabase.storage
+        .from("images")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+        throw new Error("Failed to get public URL for the uploaded file.");
+      }
+      
+      setImageUrl(publicUrlData.publicUrl);
+      await upsertAboutMeMutation.mutateAsync({ image_url: publicUrlData.publicUrl });
+
+      return publicUrlData.publicUrl;
+    },
+    onSuccess: () => {
+      showSuccess("Image uploaded successfully!");
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    onError: (err) => {
+      showError(`Error uploading file: ${err.message}`);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    upsertAboutMeMutation.mutate({ id: ABOUT_ME_SINGLETON_ID, content, image_url: imageUrl });
+    upsertAboutMeMutation.mutate({ content, image_url: imageUrl });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    } else {
+      setSelectedFile(null);
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (selectedFile) {
+      uploadFileMutation.mutate(selectedFile);
+    } else {
+      showError("Please select a file to upload.");
+    }
   };
 
   if (isLoading) return <div className="text-center text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-5 w-5 animate-spin" /> Loading About Me content...</div>;
@@ -102,19 +157,33 @@ const AboutMeManagement: React.FC = () => {
                 onChange={(e) => setContent(e.target.value)}
                 rows={10}
                 className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                required
               />
             </div>
             <div>
-              <Label htmlFor="image_url">Image URL (Optional)</Label>
-              <Input
-                id="image_url"
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/your-image.jpg"
-                className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-              />
+              <Label htmlFor="imageFile">Image</Label>
+              <div className="mt-2 flex items-center gap-4">
+                <Input
+                  id="imageFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                  ref={fileInputRef}
+                />
+                <Button
+                  type="button"
+                  onClick={handleUploadClick}
+                  disabled={uploadFileMutation.isPending || !selectedFile}
+                >
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                </Button>
+              </div>
+              {imageUrl && (
+                <div className="mt-4">
+                  <img src={imageUrl} alt="About me preview" className="rounded-md w-48 h-48 object-cover" />
+                </div>
+              )}
             </div>
             <Button type="submit" disabled={upsertAboutMeMutation.isPending}>
               {upsertAboutMeMutation.isPending ? "Saving..." : "Save Changes"}

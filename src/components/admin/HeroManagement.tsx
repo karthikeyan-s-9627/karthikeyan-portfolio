@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, UploadCloud } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -34,6 +34,8 @@ const HeroManagement: React.FC = () => {
   const [heroImageUrl, setHeroImageUrl] = React.useState("");
   const [userId, setUserId] = React.useState<string | null>(null);
   const [userEmail, setUserEmail] = React.useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     const getSession = async () => {
@@ -78,12 +80,16 @@ const HeroManagement: React.FC = () => {
     }
   }, [profile]);
 
-  const updateProfileMutation = useMutation<null, Error, Partial<Profile> & { email: string }, unknown>({
+  const updateProfileMutation = useMutation<null, Error, Partial<Profile> & { email?: string }, unknown>({
     mutationFn: async (profileData) => {
       if (!userId) throw new Error("User ID not available for update.");
+      const dataToUpdate: any = { ...profileData };
+      if (userEmail) {
+        dataToUpdate.email = userEmail;
+      }
       const { error } = await supabase
         .from("profiles")
-        .upsert({ id: userId, ...profileData })
+        .upsert({ id: userId, ...dataToUpdate })
         .eq("id", userId);
       if (error) throw error;
       return null;
@@ -97,19 +103,68 @@ const HeroManagement: React.FC = () => {
     },
   });
 
+  const uploadFileMutation = useMutation<string, Error, File, unknown>({
+    mutationFn: async (file) => {
+      if (!userId) throw new Error("User ID not available for upload.");
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${userId}-hero.${fileExtension}`;
+      const filePath = `${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("images")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+        throw new Error("Failed to get public URL for the uploaded file.");
+      }
+      
+      setHeroImageUrl(publicUrlData.publicUrl);
+      await updateProfileMutation.mutateAsync({ hero_image_url: publicUrlData.publicUrl });
+
+      return publicUrlData.publicUrl;
+    },
+    onSuccess: () => {
+      showSuccess("Image uploaded successfully!");
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    onError: (err) => {
+      showError(`Error uploading file: ${err.message}`);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userEmail) {
-      showError("User email not found. Cannot update profile.");
-      return;
-    }
     updateProfileMutation.mutate({
       first_name: firstName,
       last_name: lastName,
       tagline: tagline,
       hero_image_url: heroImageUrl,
-      email: userEmail,
     });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    } else {
+      setSelectedFile(null);
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (selectedFile) {
+      uploadFileMutation.mutate(selectedFile);
+    } else {
+      showError("Please select a file to upload.");
+    }
   };
 
   if (isLoading) return <div className="text-center text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-5 w-5 animate-spin" /> Loading hero section content...</div>;
@@ -133,7 +188,6 @@ const HeroManagement: React.FC = () => {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                required
               />
             </div>
             <div>
@@ -143,7 +197,6 @@ const HeroManagement: React.FC = () => {
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                required
               />
             </div>
             <div>
@@ -154,19 +207,33 @@ const HeroManagement: React.FC = () => {
                 onChange={(e) => setTagline(e.target.value)}
                 rows={3}
                 className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                required
               />
             </div>
             <div>
-              <Label htmlFor="heroImageUrl">Hero Image URL (Optional)</Label>
-              <Input
-                id="heroImageUrl"
-                type="url"
-                value={heroImageUrl}
-                onChange={(e) => setHeroImageUrl(e.target.value)}
-                placeholder="https://example.com/your-hero-image.jpg"
-                className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-              />
+              <Label htmlFor="heroImageFile">Hero Image</Label>
+              <div className="mt-2 flex items-center gap-4">
+                <Input
+                  id="heroImageFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                  ref={fileInputRef}
+                />
+                <Button
+                  type="button"
+                  onClick={handleUploadClick}
+                  disabled={uploadFileMutation.isPending || !selectedFile}
+                >
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                </Button>
+              </div>
+              {heroImageUrl && (
+                <div className="mt-4">
+                  <img src={heroImageUrl} alt="Hero preview" className="rounded-full w-48 h-48 object-cover" />
+                </div>
+              )}
             </div>
             <Button type="submit" disabled={updateProfileMutation.isPending}>
               {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}

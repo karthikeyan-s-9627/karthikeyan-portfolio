@@ -133,7 +133,6 @@ const ContactInfoManagement: React.FC = () => {
                 value={contactInfo.email}
                 onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
                 className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                required
               />
             </div>
             <div>
