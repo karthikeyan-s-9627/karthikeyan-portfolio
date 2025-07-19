@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, UploadCloud, FileText, Trash2 } from "lucide-react";
-import { createClient } from '@supabase/supabase-js'; // Import createClient for authenticated calls
 
 interface Resume {
   id: string;
@@ -85,32 +84,17 @@ const ResumeManagement: React.FC = () => {
 
   const uploadFileMutation = useMutation<string, Error, File, unknown>({
     mutationFn: async (file) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
       const fileExtension = file.name.split('.').pop();
       const fileName = `${RESUME_SINGLETON_ID}.${fileExtension}`;
-      const { error: uploadError } = await authenticatedSupabase.storage
-        .from("resumes") // Assuming a 'resumes' bucket for resume files
+      const { error: uploadError } = await supabase.storage
+        .from("resumes")
         .upload(fileName, file, {
           upsert: true,
         });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = authenticatedSupabase.storage
+      const { data: publicUrlData } = supabase.storage
         .from("resumes")
         .getPublicUrl(fileName);
 
@@ -136,26 +120,11 @@ const ResumeManagement: React.FC = () => {
 
   const deleteFileMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (filePath) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
       const fileName = filePath.split('/').pop();
       if (!fileName) throw new Error("Invalid file path.");
 
-      const { error: deleteError } = await authenticatedSupabase.storage
-        .from("resumes") // Assuming a 'resumes' bucket for resume files
+      const { error: deleteError } = await supabase.storage
+        .from("resumes")
         .remove([fileName]);
 
       if (deleteError) throw deleteError;

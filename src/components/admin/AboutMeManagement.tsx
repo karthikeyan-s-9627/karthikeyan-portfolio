@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { supabase } from "@/lib/supabase"; // Keep importing the base supabase client
+import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, UploadCloud, Image, Link, Trash2, Edit } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import ImageEditorDialog from "@/components/ImageEditorDialog"; // Import the new component
-import { createClient } from '@supabase/supabase-js'; // Import createClient for authenticated calls
+import ImageEditorDialog from "@/components/ImageEditorDialog";
 
 interface AboutMeContent {
   id: string;
@@ -21,7 +20,7 @@ interface AboutMeContent {
   updated_at: string;
 }
 
-const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001"; // Matches the default ID in SQL
+const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001";
 
 const DEFAULT_ABOUT_ME_CONTENT = {
   content: "Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.\n\nMy academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.\n\nOutside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.",
@@ -46,7 +45,7 @@ const AboutMeManagement: React.FC = () => {
         .eq("id", ABOUT_ME_SINGLETON_ID)
         .single();
       if (error) {
-        if (error.code === 'PGRST116') { // No rows found
+        if (error.code === 'PGRST116') {
           return {
             id: ABOUT_ME_SINGLETON_ID,
             ...DEFAULT_ABOUT_ME_CONTENT,
@@ -63,7 +62,7 @@ const AboutMeManagement: React.FC = () => {
     if (data) {
       setContent(data.content ?? DEFAULT_ABOUT_ME_CONTENT.content);
       setImageUrl(data.image_url ?? DEFAULT_ABOUT_ME_CONTENT.image_url);
-      setImageSourceType(data.image_url ? 'url' : 'upload'); // Set initial source type
+      setImageSourceType(data.image_url ? 'url' : 'upload');
     }
   }, [data]);
 
@@ -87,32 +86,17 @@ const AboutMeManagement: React.FC = () => {
 
   const uploadFileMutation = useMutation<string, Error, File, unknown>({
     mutationFn: async (file) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
       const fileExtension = file.name.split('.').pop();
       const fileName = `${ABOUT_ME_SINGLETON_ID}-about.${fileExtension}`;
       const filePath = `${fileName}`;
       
-      const { error: uploadError } = await authenticatedSupabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("images")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = authenticatedSupabase.storage
+      const { data: publicUrlData } = supabase.storage
         .from("images")
         .getPublicUrl(filePath);
 
@@ -121,7 +105,7 @@ const AboutMeManagement: React.FC = () => {
       }
       
       setImageUrl(publicUrlData.publicUrl);
-      await upsertAboutMeMutation.mutateAsync({ image_url: publicUrlData.publicUrl });
+      await upsertAboutMeMutation.mutateAsync({ image_url: publicUrlData.publicUrl, content: content });
 
       return publicUrlData.publicUrl;
     },
@@ -131,7 +115,7 @@ const AboutMeManagement: React.FC = () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      setIsImageEditorOpen(false); // Close editor after successful upload
+      setIsImageEditorOpen(false);
     },
     onError: (err) => {
       showError(`Error uploading file: ${err.message}`);
@@ -140,31 +124,17 @@ const AboutMeManagement: React.FC = () => {
 
   const deleteImageMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (filePath) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
-      if (filePath.includes(authenticatedSupabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+      if (filePath.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
         const fileName = filePath.split('/').pop();
         if (fileName) {
-          const { error: deleteError } = await authenticatedSupabase.storage
+          const { error: deleteError } = await supabase.storage
             .from("images")
             .remove([fileName]);
           if (deleteError) throw deleteError;
         }
       }
-      await upsertAboutMeMutation.mutateAsync({ image_url: null });
+      // Pass current content along with null image_url to avoid not-null constraint violation
+      await upsertAboutMeMutation.mutateAsync({ image_url: null, content: content });
       return null;
     },
     onSuccess: () => {
@@ -173,7 +143,7 @@ const AboutMeManagement: React.FC = () => {
       setImageUrl("");
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setIsImageEditorOpen(false); // Close editor after deletion
+      setIsImageEditorOpen(false);
     },
     onError: (err) => {
       showError(`Error deleting image: ${err.message}`);
@@ -255,6 +225,20 @@ const AboutMeManagement: React.FC = () => {
                 </div>
               </RadioGroup>
 
+              {imageUrl && (
+                <div className="mt-4 flex flex-col items-start gap-2">
+                  <Label>Current Image Preview</Label>
+                  <img src={imageUrl} alt="About me preview" className="rounded-md w-48 h-48 object-cover border border-border/50" />
+                  <div className="flex gap-2 mt-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                      <Edit className="mr-2 h-4 w-4" /> Edit Image
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => deleteImageMutation.mutate(imageUrl)} disabled={deleteImageMutation.isPending}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                    </Button>
+                  </div>
+                </div>
+              )}
               {imageSourceType === 'url' ? (
                 <div className="mt-4">
                   <Label htmlFor="imageUrl">Image URL</Label>
@@ -285,21 +269,6 @@ const AboutMeManagement: React.FC = () => {
                     >
                       <UploadCloud className="mr-2 h-4 w-4" />
                       {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {imageUrl && (
-                <div className="mt-4 flex flex-col items-start gap-2">
-                  <Label>Current Image Preview</Label>
-                  <img src={imageUrl} alt="About me preview" className="rounded-md w-48 h-48 object-cover border border-border/50" />
-                  <div className="flex gap-2 mt-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
-                      <Edit className="mr-2 h-4 w-4" /> Edit Image
-                    </Button>
-                    <Button type="button" variant="destructive" size="sm" onClick={() => deleteImageMutation.mutate(imageUrl)} disabled={deleteImageMutation.isPending}>
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete Image
                     </Button>
                   </div>
                 </div>

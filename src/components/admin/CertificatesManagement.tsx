@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { supabase } from "@/lib/supabase"; // Keep importing the base supabase client
+import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -41,8 +41,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import ImageEditorDialog from "@/components/ImageEditorDialog"; // Import the new component
-import { createClient } from '@supabase/supabase-js'; // Import createClient for authenticated calls
+import ImageEditorDialog from "@/components/ImageEditorDialog";
 
 interface Certificate {
   id: string;
@@ -151,7 +150,7 @@ const CertificatesManagement: React.FC = () => {
       setNewCertificate({ id: "", title: "", issuer: "", date: "", description: "", link: "", image: "" });
       setSelectedFile(null);
       if(fileInputRef.current) fileInputRef.current.value = "";
-      setImageSourceType('url'); // Reset to URL when dialog closes
+      setImageSourceType('url');
     }
   }, [isDialogOpen]);
 
@@ -191,26 +190,11 @@ const CertificatesManagement: React.FC = () => {
 
   const deleteCertificateMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (id) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
       const certificateToDelete = displayCertificates.find(c => c.id === id);
-      if (certificateToDelete?.image && certificateToDelete.image.includes(authenticatedSupabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+      if (certificateToDelete?.image && certificateToDelete.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
         const fileName = certificateToDelete.image.split('/').pop();
         if (fileName) {
-          const { error: deleteError } = await authenticatedSupabase.storage
+          const { error: deleteError } = await supabase.storage
             .from("images")
             .remove([fileName]);
           if (deleteError) throw deleteError;
@@ -223,41 +207,56 @@ const CertificatesManagement: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
       showSuccess("Certificate deleted successfully!");
-      setIsImageEditorOpen(false); // Close editor if the certificate's image was being edited
+      setIsImageEditorOpen(false);
     },
     onError: (err) => {
       showError(`Error deleting certificate: ${err.message}`);
     },
   });
 
+  const deleteCertificateImageMutation = useMutation<null, Error, string, unknown>({
+    mutationFn: async (certificateId) => {
+      const certificateToUpdate = displayCertificates.find(c => c.id === certificateId);
+      if (!certificateToUpdate) throw new Error("Certificate not found.");
+
+      if (certificateToUpdate.image && certificateToUpdate.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+        const fileName = certificateToUpdate.image.split('/').pop();
+        if (fileName) {
+          const { error: deleteError } = await supabase.storage
+            .from("images")
+            .remove([fileName]);
+          if (deleteError) throw deleteError;
+        }
+      }
+      // Update the certificate record to set image to null
+      const { error: updateError } = await supabase.from("certificates").update({ image: null }).eq("id", certificateId);
+      if (updateError) throw updateError;
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["certificates"] });
+      showSuccess("Certificate image deleted successfully!");
+      setNewCertificate(prev => ({ ...prev, image: "" })); // Clear image in form state
+      setIsImageEditorOpen(false);
+    },
+    onError: (err) => {
+      showError(`Error deleting certificate image: ${err.message}`);
+    },
+  });
+
   const uploadFileMutation = useMutation<string, Error, { file: File; certificateId: string }, unknown>({
     mutationFn: async ({ file, certificateId }) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
       const fileExtension = file.name.split('.').pop();
       const fileName = `${certificateId}-certificate.${fileExtension}`;
       const filePath = `${fileName}`;
       
-      const { error: uploadError } = await authenticatedSupabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("images")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = authenticatedSupabase.storage
+      const { data: publicUrlData } = supabase.storage
         .from("images")
         .getPublicUrl(filePath);
 
@@ -272,7 +271,7 @@ const CertificatesManagement: React.FC = () => {
       showSuccess("Image uploaded successfully!");
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setIsImageEditorOpen(false); // Close editor after successful upload
+      setIsImageEditorOpen(false);
     },
     onError: (err) => {
       showError(`Error uploading file: ${err.message}`);
@@ -295,7 +294,7 @@ const CertificatesManagement: React.FC = () => {
     setNewCertificate({
       id: certificate.id, title: certificate.title, issuer: certificate.issuer, date: certificate.date, description: certificate.description, link: certificate.link || "", image: certificate.image || "",
     });
-    setImageSourceType(certificate.image ? 'url' : 'upload'); // Set initial source type based on existing image
+    setImageSourceType(certificate.image ? 'url' : 'upload');
     setIsDialogOpen(true);
   };
 
@@ -304,7 +303,7 @@ const CertificatesManagement: React.FC = () => {
     setNewCertificate({
       id: crypto.randomUUID(), title: "", issuer: "", date: "", description: "", link: "", image: "",
     });
-    setImageSourceType('upload'); // Default to upload for new items
+    setImageSourceType('upload');
     setIsDialogOpen(true);
   };
 
@@ -335,7 +334,7 @@ const CertificatesManagement: React.FC = () => {
 
   const handleImageEditorDelete = () => {
     if (newCertificate.id) {
-      deleteCertificateMutation.mutate(newCertificate.id);
+      deleteCertificateImageMutation.mutate(newCertificate.id);
     }
   };
 
@@ -397,6 +396,20 @@ const CertificatesManagement: React.FC = () => {
                     </div>
                   </RadioGroup>
 
+                  {newCertificate.image && (
+                    <div className="mt-4 flex flex-col items-start gap-2">
+                      <Label>Current Image Preview</Label>
+                      <img src={newCertificate.image} alt="Certificate preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
+                      <div className="flex gap-2 mt-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit Image
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" onClick={() => deleteCertificateImageMutation.mutate(newCertificate.id)} disabled={deleteCertificateImageMutation.isPending}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   {imageSourceType === 'url' ? (
                     <div className="mt-4">
                       <Label htmlFor="certImageUrl">Image URL</Label>
@@ -427,21 +440,6 @@ const CertificatesManagement: React.FC = () => {
                         >
                           <UploadCloud className="mr-2 h-4 w-4" />
                           {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {newCertificate.image && (
-                    <div className="mt-4 flex flex-col items-start gap-2">
-                      <Label>Current Image Preview</Label>
-                      <img src={newCertificate.image} alt="Certificate preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
-                      <div className="flex gap-2 mt-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit Image
-                        </Button>
-                        <Button type="button" variant="destructive" size="sm" onClick={() => deleteCertificateMutation.mutate(newCertificate.id)} disabled={deleteCertificateMutation.isPending}>
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Image
                         </Button>
                       </div>
                     </div>
@@ -485,7 +483,7 @@ const CertificatesManagement: React.FC = () => {
           imageUrl={newCertificate.image}
           onSave={handleImageEditorSave}
           onDelete={handleImageEditorDelete}
-          isSaving={uploadFileMutation.isPending || deleteCertificateMutation.isPending}
+          isSaving={uploadFileMutation.isPending || deleteCertificateImageMutation.isPending}
         />
       )}
     </div>

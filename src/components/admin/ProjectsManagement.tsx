@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { supabase } from "@/lib/supabase"; // Keep importing the base supabase client
+import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -42,8 +42,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import ImageEditorDialog from "@/components/ImageEditorDialog"; // Import the new component
-import { createClient } from '@supabase/supabase-js'; // Import createClient for authenticated calls
+import ImageEditorDialog from "@/components/ImageEditorDialog";
 
 interface Project {
   id: string;
@@ -159,7 +158,7 @@ const ProjectsManagement: React.FC = () => {
       setTechInput("");
       setSelectedFile(null);
       if(fileInputRef.current) fileInputRef.current.value = "";
-      setImageSourceType('url'); // Reset to URL when dialog closes
+      setImageSourceType('url');
     }
   }, [isDialogOpen]);
 
@@ -199,26 +198,11 @@ const ProjectsManagement: React.FC = () => {
 
   const deleteProjectMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (id) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
       const projectToDelete = displayProjects.find(p => p.id === id);
-      if (projectToDelete?.image && projectToDelete.image.includes(authenticatedSupabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+      if (projectToDelete?.image && projectToDelete.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
         const fileName = projectToDelete.image.split('/').pop();
         if (fileName) {
-          const { error: deleteError } = await authenticatedSupabase.storage
+          const { error: deleteError } = await supabase.storage
             .from("images")
             .remove([fileName]);
           if (deleteError) throw deleteError;
@@ -231,41 +215,56 @@ const ProjectsManagement: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       showSuccess("Project deleted successfully!");
-      setIsImageEditorOpen(false); // Close editor if the project's image was being edited
+      setIsImageEditorOpen(false);
     },
     onError: (err) => {
       showError(`Error deleting project: ${err.message}`);
     },
   });
 
+  const deleteProjectImageMutation = useMutation<null, Error, string, unknown>({
+    mutationFn: async (projectId) => {
+      const projectToUpdate = displayProjects.find(p => p.id === projectId);
+      if (!projectToUpdate) throw new Error("Project not found.");
+
+      if (projectToUpdate.image && projectToUpdate.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+        const fileName = projectToUpdate.image.split('/').pop();
+        if (fileName) {
+          const { error: deleteError } = await supabase.storage
+            .from("images")
+            .remove([fileName]);
+          if (deleteError) throw deleteError;
+        }
+      }
+      // Update the project record to set image to null
+      const { error: updateError } = await supabase.from("projects").update({ image: null }).eq("id", projectId);
+      if (updateError) throw updateError;
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      showSuccess("Project image deleted successfully!");
+      setNewProject(prev => ({ ...prev, image: "" })); // Clear image in form state
+      setIsImageEditorOpen(false);
+    },
+    onError: (err) => {
+      showError(`Error deleting project image: ${err.message}`);
+    },
+  });
+
   const uploadFileMutation = useMutation<string, Error, { file: File; projectId: string }, unknown>({
     mutationFn: async ({ file, projectId }) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
       const fileExtension = file.name.split('.').pop();
       const fileName = `${projectId}-project.${fileExtension}`;
       const filePath = `${fileName}`;
       
-      const { error: uploadError } = await authenticatedSupabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("images")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = authenticatedSupabase.storage
+      const { data: publicUrlData } = supabase.storage
         .from("images")
         .getPublicUrl(filePath);
 
@@ -280,7 +279,7 @@ const ProjectsManagement: React.FC = () => {
       showSuccess("Image uploaded successfully!");
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setIsImageEditorOpen(false); // Close editor after successful upload
+      setIsImageEditorOpen(false);
     },
     onError: (err) => {
       showError(`Error uploading file: ${err.message}`);
@@ -314,7 +313,7 @@ const ProjectsManagement: React.FC = () => {
     setNewProject({
       id: project.id, title: project.title, description: project.description, technologies: project.technologies || [], github_link: project.github_link || "", live_link: project.live_link || "", image: project.image || "",
     });
-    setImageSourceType(project.image ? 'url' : 'upload'); // Set initial source type based on existing image
+    setImageSourceType(project.image ? 'url' : 'upload');
     setIsDialogOpen(true);
   };
 
@@ -323,7 +322,7 @@ const ProjectsManagement: React.FC = () => {
     setNewProject({
       id: crypto.randomUUID(), title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
     });
-    setImageSourceType('upload'); // Default to upload for new items
+    setImageSourceType('upload');
     setIsDialogOpen(true);
   };
 
@@ -354,7 +353,7 @@ const ProjectsManagement: React.FC = () => {
 
   const handleImageEditorDelete = () => {
     if (newProject.id) {
-      deleteProjectMutation.mutate(newProject.id);
+      deleteProjectImageMutation.mutate(newProject.id);
     }
   };
 
@@ -425,6 +424,20 @@ const ProjectsManagement: React.FC = () => {
                     </div>
                   </RadioGroup>
 
+                  {newProject.image && (
+                    <div className="mt-4 flex flex-col items-start gap-2">
+                      <Label>Current Image Preview</Label>
+                      <img src={newProject.image} alt="Project preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
+                      <div className="flex gap-2 mt-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit Image
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" onClick={() => deleteProjectImageMutation.mutate(newProject.id)} disabled={deleteProjectImageMutation.isPending}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   {imageSourceType === 'url' ? (
                     <div className="mt-4">
                       <Label htmlFor="projectImageUrl">Image URL</Label>
@@ -455,21 +468,6 @@ const ProjectsManagement: React.FC = () => {
                         >
                           <UploadCloud className="mr-2 h-4 w-4" />
                           {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {newProject.image && (
-                    <div className="mt-4 flex flex-col items-start gap-2">
-                      <Label>Current Image Preview</Label>
-                      <img src={newProject.image} alt="Project preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
-                      <div className="flex gap-2 mt-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit Image
-                        </Button>
-                        <Button type="button" variant="destructive" size="sm" onClick={() => deleteProjectMutation.mutate(newProject.id)} disabled={deleteProjectMutation.isPending}>
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Image
                         </Button>
                       </div>
                     </div>
@@ -512,7 +510,7 @@ const ProjectsManagement: React.FC = () => {
           imageUrl={newProject.image}
           onSave={handleImageEditorSave}
           onDelete={handleImageEditorDelete}
-          isSaving={uploadFileMutation.isPending || deleteProjectMutation.isPending}
+          isSaving={uploadFileMutation.isPending || deleteProjectImageMutation.isPending}
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { supabase } from "@/lib/supabase"; // Keep importing the base supabase client
+import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, UploadCloud, Image, Link, Trash2, Edit } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import ImageEditorDialog from "@/components/ImageEditorDialog"; // Import the new component
-import { createClient } from '@supabase/supabase-js'; // Import createClient for authenticated calls
+import ImageEditorDialog from "@/components/ImageEditorDialog";
 
 interface Profile {
   id: string;
@@ -63,7 +62,7 @@ const HeroManagement: React.FC = () => {
         .eq("id", userId)
         .single();
       if (error) {
-        if (error.code === 'PGRST116') { // No rows found
+        if (error.code === 'PGRST116') {
           return {
             id: userId,
             ...DEFAULT_HERO_PROFILE,
@@ -82,7 +81,7 @@ const HeroManagement: React.FC = () => {
       setLastName(profile.last_name ?? DEFAULT_HERO_PROFILE.last_name);
       setTagline(profile.tagline ?? DEFAULT_HERO_PROFILE.tagline);
       setHeroImageUrl(profile.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url);
-      setImageSourceType(profile.hero_image_url ? 'url' : 'upload'); // Set initial source type
+      setImageSourceType(profile.hero_image_url ? 'url' : 'upload');
     }
   }, [profile]);
 
@@ -112,32 +111,17 @@ const HeroManagement: React.FC = () => {
   const uploadFileMutation = useMutation<string, Error, File, unknown>({
     mutationFn: async (file) => {
       if (!userId) throw new Error("User ID not available for upload.");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
       const fileExtension = file.name.split('.').pop();
       const fileName = `${userId}-hero.${fileExtension}`;
       const filePath = `${fileName}`;
       
-      const { error: uploadError } = await authenticatedSupabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("images")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = authenticatedSupabase.storage
+      const { data: publicUrlData } = supabase.storage
         .from("images")
         .getPublicUrl(filePath);
 
@@ -146,7 +130,12 @@ const HeroManagement: React.FC = () => {
       }
       
       setHeroImageUrl(publicUrlData.publicUrl);
-      await updateProfileMutation.mutateAsync({ hero_image_url: publicUrlData.publicUrl });
+      await updateProfileMutation.mutateAsync({
+        first_name: firstName,
+        last_name: lastName,
+        tagline: tagline,
+        hero_image_url: publicUrlData.publicUrl
+      });
 
       return publicUrlData.publicUrl;
     },
@@ -156,7 +145,7 @@ const HeroManagement: React.FC = () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      setIsImageEditorOpen(false); // Close editor after successful upload
+      setIsImageEditorOpen(false);
     },
     onError: (err) => {
       showError(`Error uploading file: ${err.message}`);
@@ -165,31 +154,22 @@ const HeroManagement: React.FC = () => {
 
   const deleteImageMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (filePath) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated.");
-
-      const authenticatedSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        }
-      );
-
-      if (filePath.includes(authenticatedSupabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+      if (filePath.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
         const fileName = filePath.split('/').pop();
         if (fileName) {
-          const { error: deleteError } = await authenticatedSupabase.storage
+          const { error: deleteError } = await supabase.storage
             .from("images")
             .remove([fileName]);
           if (deleteError) throw deleteError;
         }
       }
-      await updateProfileMutation.mutateAsync({ hero_image_url: null });
+      // Pass current profile fields along with null hero_image_url
+      await updateProfileMutation.mutateAsync({
+        first_name: firstName,
+        last_name: lastName,
+        tagline: tagline,
+        hero_image_url: null,
+      });
       return null;
     },
     onSuccess: () => {
@@ -198,7 +178,7 @@ const HeroManagement: React.FC = () => {
       setHeroImageUrl("");
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setIsImageEditorOpen(false); // Close editor after deletion
+      setIsImageEditorOpen(false);
     },
     onError: (err) => {
       showError(`Error deleting image: ${err.message}`);
@@ -305,6 +285,20 @@ const HeroManagement: React.FC = () => {
                 </div>
               </RadioGroup>
 
+              {heroImageUrl && (
+                <div className="mt-4 flex flex-col items-start gap-2">
+                  <Label>Current Hero Image Preview</Label>
+                  <img src={heroImageUrl} alt="Hero preview" className="rounded-full w-48 h-48 object-cover border border-border/50" />
+                  <div className="flex gap-2 mt-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                      <Edit className="mr-2 h-4 w-4" /> Edit Image
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => deleteImageMutation.mutate(heroImageUrl)} disabled={deleteImageMutation.isPending}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                    </Button>
+                  </div>
+                </div>
+              )}
               {imageSourceType === 'url' ? (
                 <div className="mt-4">
                   <Label htmlFor="heroImageUrl">Hero Image URL</Label>
@@ -335,21 +329,6 @@ const HeroManagement: React.FC = () => {
                     >
                       <UploadCloud className="mr-2 h-4 w-4" />
                       {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {heroImageUrl && (
-                <div className="mt-4 flex flex-col items-start gap-2">
-                  <Label>Current Hero Image Preview</Label>
-                  <img src={heroImageUrl} alt="Hero preview" className="rounded-full w-48 h-48 object-cover border border-border/50" />
-                  <div className="flex gap-2 mt-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
-                      <Edit className="mr-2 h-4 w-4" /> Edit Image
-                    </Button>
-                    <Button type="button" variant="destructive" size="sm" onClick={() => deleteImageMutation.mutate(heroImageUrl)} disabled={deleteImageMutation.isPending}>
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete Image
                     </Button>
                   </div>
                 </div>
