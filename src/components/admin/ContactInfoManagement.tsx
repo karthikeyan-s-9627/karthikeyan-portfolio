@@ -123,7 +123,7 @@ const ContactInfoManagement: React.FC = () => {
         <CardHeader>
           <CardTitle>Edit Your Contact Details</CardTitle>
         </CardHeader>
-        <CardContent className="p-6 max-h-[calc(100vh-280px)] overflow-y-auto">
+        <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
