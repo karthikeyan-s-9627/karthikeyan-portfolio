@@ -446,180 +446,182 @@ const ProjectsManagement: React.FC = () => {
           <DialogTrigger asChild><Button onClick={handleOpenNewDialog}><PlusCircle className="mr-2 h-4 w-4" /> Add New Project</Button></DialogTrigger>
           <DialogContent className="sm:max-w-[600px] bg-card border-border/50">
             <DialogHeader><DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle></DialogHeader>
-            <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="technologies" className="text-right">Technologies</Label>
-                <div className="col-span-3 flex flex-col gap-2">
-                  <div className="flex gap-2">
-                    <Input id="technologies" value={techInput} onChange={(e) => setTechInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTechnology(); } }} placeholder="Add technology (e.g., React)" className="flex-grow bg-input/50 border-border/50 focus:border-primary" />
-                    <Button type="button" onClick={handleAddTechnology} variant="outline">Add</Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">{newProject.technologies.map((tech, index) => (<Badge key={index} variant="secondary" className="flex items-center gap-1">{tech}<Button type="button" variant="ghost" size="sm" className="h-auto p-0.5" onClick={() => handleRemoveTechnology(tech)}>&times;</Button></Badge>))}</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="github_link" className="text-right">GitHub Link</Label><Input id="github_link" value={newProject.github_link} onChange={(e) => setNewProject({ ...newProject, github_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="live_link" className="text-right">Live Link</Label><Input id="live_link" value={newProject.live_link} onChange={(e) => setNewProject({ ...newProject, live_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
-              
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">Image Source</Label>
-                <div className="col-span-3">
-                  <RadioGroup
-                    value={imageSourceType}
-                    onValueChange={(value: 'url' | 'upload' | 'local') => {
-                      setImageSourceType(value);
-                      // Clear other inputs when changing source type
-                      if (value === 'url') {
-                        setLocalImageFileName("");
-                        setSelectedFile(null);
-                        if (fileInputRef.current) fileInputRef.current.value = "";
-                      } else if (value === 'upload') {
-                        setLocalImageFileName("");
-                        if (!newProject.image?.startsWith('http')) setNewProject(prev => ({ ...prev, image: "" }));
-                      } else if (value === 'local') {
-                        setSelectedFile(null);
-                        if (fileInputRef.current) fileInputRef.current.value = "";
-                        if (!newProject.image?.startsWith('/images/')) setNewProject(prev => ({ ...prev, image: "" }));
-                      }
-                    }}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="url" id="project-image-source-url" />
-                      <Label htmlFor="project-image-source-url" className="flex items-center gap-1">
-                        <Link className="h-4 w-4" /> External URL
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="upload" id="project-image-source-upload" />
-                      <Label htmlFor="project-image-source-upload" className="flex items-center gap-1">
-                        <UploadCloud className="h-4 w-4" /> Upload to Supabase
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="local" id="project-image-source-local" />
-                      <Label htmlFor="project-image-source-local" className="flex items-center gap-1">
-                        <Image className="h-4 w-4" /> Local Asset
-                      </Label>
-                    </div>
-                  </RadioGroup>
-
-                  {newProject.image && (
-                    <div className="mt-4 flex flex-col items-start gap-2">
-                      <Label>Current Image Preview</Label>
-                      <img src={newProject.image} alt="Project preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
-                      <div className="flex gap-2 mt-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsImageEditorOpen(true)}
-                          disabled={imageSourceType === 'local'} // Disable edit for local assets
-                        >
-                          <Edit className="mr-2 h-4 w-4" /> Edit Image
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={handleImageEditorDelete}
-                          disabled={deleteProjectImageMutation.isPending}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Image
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {imageSourceType === 'url' && (
-                    <div className="mt-4">
-                      <Label htmlFor="projectImageUrl">Image URL</Label>
-                      <Input
-                        id="projectImageUrl"
-                        type="url"
-                        value={newProject.image}
-                        onChange={(e) => setNewProject({ ...newProject, image: e.target.value })}
-                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                      />
-                    </div>
-                  )}
-                  {imageSourceType === 'upload' && (
-                    <div className="mt-4">
-                      <Label htmlFor="projectImageFile">Upload Image</Label>
-                      <div className="mt-2 flex items-center gap-4">
-                        <Input
-                          id="projectImageFile"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="flex-grow bg-input/50 border-border/50 focus:border-primary"
-                          ref={fileInputRef}
-                        />
-                        <Button
-                          type="button"
-                          onClick={handleUploadClick}
-                          disabled={uploadFileMutation.isPending || !selectedFile}
-                        >
-                          <UploadCloud className="mr-2 h-4 w-4" />
-                          {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {imageSourceType === 'local' && (
-                    <div className="mt-4">
-                      <Label htmlFor="localImageFileName">Local Asset Path</Label>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-muted-foreground">/images/</span>
-                        <Input
-                          id="localImageFileName"
-                          value={localImageFileName}
-                          onChange={(e) => setLocalImageFileName(e.target.value)}
-                          placeholder="my-project-image.jpg"
-                          className="flex-grow bg-input/50 border-border/50 focus:border-primary"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Place your image file in the `public/images/` folder of your project.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {newProject.image && ( // Only show size inputs if an image is present
+            <CardContent className="p-6 max-h-[calc(100vh-280px)] overflow-y-auto"> {/* Added max-h and overflow-y-auto */}
+              <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Image Size</Label>
-                  <div className="col-span-3 grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="imageWidth">Width</Label>
-                      <Input
-                        id="imageWidth"
-                        value={newProject.image_width}
-                        onChange={(e) => setNewProject({ ...newProject, image_width: e.target.value })}
-                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                        placeholder="e.g., 300px"
-                      />
+                  <Label htmlFor="technologies" className="text-right">Technologies</Label>
+                  <div className="col-span-3 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Input id="technologies" value={techInput} onChange={(e) => setTechInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTechnology(); } }} placeholder="Add technology (e.g., React)" className="flex-grow bg-input/50 border-border/50 focus:border-primary" />
+                      <Button type="button" onClick={handleAddTechnology} variant="outline">Add</Button>
                     </div>
-                    <div>
-                      <Label htmlFor="imageHeight">Height</Label>
-                      <Input
-                        id="imageHeight"
-                        value={newProject.image_height}
-                        onChange={(e) => setNewProject({ ...newProject, image_height: e.target.value })}
-                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
-                        placeholder="e.g., 200px"
-                      />
-                    </div>
+                    <div className="flex flex-wrap gap-2">{newProject.technologies.map((tech, index) => (<Badge key={index} variant="secondary" className="flex items-center gap-1">{tech}<Button type="button" variant="ghost" size="sm" className="h-auto p-0.5" onClick={() => handleRemoveTechnology(tech)}>&times;</Button></Badge>))}</div>
                   </div>
                 </div>
-              )}
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="github_link" className="text-right">GitHub Link</Label><Input id="github_link" value={newProject.github_link} onChange={(e) => setNewProject({ ...newProject, github_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+                <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="live_link" className="text-right">Live Link</Label><Input id="live_link" value={newProject.live_link} onChange={(e) => setNewProject({ ...newProject, live_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+                
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label className="text-right pt-2">Image Source</Label>
+                  <div className="col-span-3">
+                    <RadioGroup
+                      value={imageSourceType}
+                      onValueChange={(value: 'url' | 'upload' | 'local') => {
+                        setImageSourceType(value);
+                        // Clear other inputs when changing source type
+                        if (value === 'url') {
+                          setLocalImageFileName("");
+                          setSelectedFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        } else if (value === 'upload') {
+                          setLocalImageFileName("");
+                          if (!newProject.image?.startsWith('http')) setNewProject(prev => ({ ...prev, image: "" }));
+                        } else if (value === 'local') {
+                          setSelectedFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                          if (!newProject.image?.startsWith('/images/')) setNewProject(prev => ({ ...prev, image: "" }));
+                        }
+                      }}
+                      className="flex space-x-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="url" id="project-image-source-url" />
+                        <Label htmlFor="project-image-source-url" className="flex items-center gap-1">
+                          <Link className="h-4 w-4" /> External URL
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="upload" id="project-image-source-upload" />
+                        <Label htmlFor="project-image-source-upload" className="flex items-center gap-1">
+                          <UploadCloud className="h-4 w-4" /> Upload to Supabase
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="local" id="project-image-source-local" />
+                        <Label htmlFor="project-image-source-local" className="flex items-center gap-1">
+                          <Image className="h-4 w-4" /> Local Asset
+                        </Label>
+                      </div>
+                    </RadioGroup>
 
-              <DialogFooter><Button type="submit" disabled={addProjectMutation.isPending || updateProjectMutation.isPending}>{editingProject ? (updateProjectMutation.isPending ? "Saving..." : "Save Changes") : (addProjectMutation.isPending ? "Adding..." : "Add Project")}</Button></DialogFooter>
-            </form>
+                    {newProject.image && (
+                      <div className="mt-4 flex flex-col items-start gap-2">
+                        <Label>Current Image Preview</Label>
+                        <img src={newProject.image} alt="Project preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsImageEditorOpen(true)}
+                            disabled={imageSourceType === 'local'} // Disable edit for local assets
+                          >
+                            <Edit className="mr-2 h-4 w-4" /> Edit Image
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleImageEditorDelete}
+                            disabled={deleteProjectImageMutation.isPending}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {imageSourceType === 'url' && (
+                      <div className="mt-4">
+                        <Label htmlFor="projectImageUrl">Image URL</Label>
+                        <Input
+                          id="projectImageUrl"
+                          type="url"
+                          value={newProject.image}
+                          onChange={(e) => setNewProject({ ...newProject, image: e.target.value })}
+                          className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                        />
+                      </div>
+                    )}
+                    {imageSourceType === 'upload' && (
+                      <div className="mt-4">
+                        <Label htmlFor="projectImageFile">Upload Image</Label>
+                        <div className="mt-2 flex items-center gap-4">
+                          <Input
+                            id="projectImageFile"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                            ref={fileInputRef}
+                          />
+                          <Button
+                            type="button"
+                            onClick={handleUploadClick}
+                            disabled={uploadFileMutation.isPending || !selectedFile}
+                          >
+                            <UploadCloud className="mr-2 h-4 w-4" />
+                            {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {imageSourceType === 'local' && (
+                      <div className="mt-4">
+                        <Label htmlFor="localImageFileName">Local Asset Path</Label>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-muted-foreground">/images/</span>
+                          <Input
+                            id="localImageFileName"
+                            value={localImageFileName}
+                            onChange={(e) => setLocalImageFileName(e.target.value)}
+                            placeholder="my-project-image.jpg"
+                            className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Place your image file in the `public/images/` folder of your project.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {newProject.image && ( // Only show size inputs if an image is present
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Image Size</Label>
+                    <div className="col-span-3 grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="imageWidth">Width</Label>
+                        <Input
+                          id="imageWidth"
+                          value={newProject.image_width}
+                          onChange={(e) => setNewProject({ ...newProject, image_width: e.target.value })}
+                          className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                          placeholder="e.g., 300px"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="imageHeight">Height</Label>
+                        <Input
+                          id="imageHeight"
+                          value={newProject.image_height}
+                          onChange={(e) => setNewProject({ ...newProject, image_height: e.target.value })}
+                          className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                          placeholder="e.g., 200px"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <DialogFooter><Button type="submit" disabled={addProjectMutation.isPending || updateProjectMutation.isPending}>{editingProject ? (updateProjectMutation.isPending ? "Saving..." : "Save Changes") : (addProjectMutation.isPending ? "Adding..." : "Add Project")}</Button></DialogFooter>
+              </form>
+            </CardContent>
           </DialogContent>
         </Dialog>
       </div>
-      <div className="rounded-md border border-border/50 shadow-lg overflow-auto">
+      <div className="rounded-md border border-border/50 shadow-lg overflow-auto max-h-[calc(100vh-350px)]">
         <Table>
           <TableHeader>
             <TableRow>
