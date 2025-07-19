@@ -99,7 +99,7 @@ const ContactMessagesManagement: React.FC = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-foreground">Manage Contact Messages</h2>
 
-      <div className="rounded-md border border-border/50 shadow-lg overflow-auto max-h-[calc(100vh-350px)]">
+      <div className="rounded-md border border-border/50 shadow-lg overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>

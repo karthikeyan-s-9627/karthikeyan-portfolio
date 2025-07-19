@@ -621,7 +621,7 @@ const ProjectsManagement: React.FC = () => {
           </DialogContent>
         </Dialog>
       </div>
-      <div className="rounded-md border border-border/50 shadow-lg overflow-auto max-h-[calc(100vh-350px)]">
+      <div className="rounded-md border border-border/50 shadow-lg overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
