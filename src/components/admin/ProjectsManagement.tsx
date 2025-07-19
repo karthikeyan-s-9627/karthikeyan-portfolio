@@ -24,7 +24,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud } from "lucide-react";
+import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud, Link } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DndContext,
@@ -41,6 +41,8 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import ImageEditorDialog from "@/components/ImageEditorDialog"; // Import the new component
 
 interface Project {
   id: string;
@@ -108,6 +110,8 @@ const ProjectsManagement: React.FC = () => {
   const [techInput, setTechInput] = React.useState("");
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload'>('url');
+  const [isImageEditorOpen, setIsImageEditorOpen] = React.useState(false);
 
   const { data: projects, isLoading, error } = useQuery<Project[], Error>({
     queryKey: ["projects"],
@@ -154,6 +158,7 @@ const ProjectsManagement: React.FC = () => {
       setTechInput("");
       setSelectedFile(null);
       if(fileInputRef.current) fileInputRef.current.value = "";
+      setImageSourceType('url'); // Reset to URL when dialog closes
     }
   }, [isDialogOpen]);
 
@@ -193,6 +198,16 @@ const ProjectsManagement: React.FC = () => {
 
   const deleteProjectMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (id) => {
+      const projectToDelete = displayProjects.find(p => p.id === id);
+      if (projectToDelete?.image && projectToDelete.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+        const fileName = projectToDelete.image.split('/').pop();
+        if (fileName) {
+          const { error: deleteError } = await supabase.storage
+            .from("images")
+            .remove([fileName]);
+          if (deleteError) throw deleteError;
+        }
+      }
       const { error } = await supabase.from("projects").delete().eq("id", id);
       if (error) throw error;
       return null;
@@ -200,6 +215,7 @@ const ProjectsManagement: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       showSuccess("Project deleted successfully!");
+      setIsImageEditorOpen(false); // Close editor if the project's image was being edited
     },
     onError: (err) => {
       showError(`Error deleting project: ${err.message}`);
@@ -233,6 +249,7 @@ const ProjectsManagement: React.FC = () => {
       showSuccess("Image uploaded successfully!");
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      setIsImageEditorOpen(false); // Close editor after successful upload
     },
     onError: (err) => {
       showError(`Error uploading file: ${err.message}`);
@@ -266,6 +283,7 @@ const ProjectsManagement: React.FC = () => {
     setNewProject({
       id: project.id, title: project.title, description: project.description, technologies: project.technologies || [], github_link: project.github_link || "", live_link: project.live_link || "", image: project.image || "",
     });
+    setImageSourceType(project.image ? 'url' : 'upload'); // Set initial source type based on existing image
     setIsDialogOpen(true);
   };
 
@@ -274,6 +292,7 @@ const ProjectsManagement: React.FC = () => {
     setNewProject({
       id: crypto.randomUUID(), title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
     });
+    setImageSourceType('upload'); // Default to upload for new items
     setIsDialogOpen(true);
   };
 
@@ -290,6 +309,21 @@ const ProjectsManagement: React.FC = () => {
       uploadFileMutation.mutate({ file: selectedFile, projectId: newProject.id });
     } else {
       showError("Please select a file to upload.");
+    }
+  };
+
+  const handleImageEditorSave = (croppedBlob: Blob) => {
+    if (newProject.id) {
+      const croppedFile = new File([croppedBlob], `${newProject.id}-project-cropped.jpeg`, { type: "image/jpeg" });
+      uploadFileMutation.mutate({ file: croppedFile, projectId: newProject.id });
+    } else {
+      showError("Project ID is missing for image upload.");
+    }
+  };
+
+  const handleImageEditorDelete = () => {
+    if (newProject.id) {
+      deleteProjectMutation.mutate(newProject.id);
     }
   };
 
@@ -337,23 +371,81 @@ const ProjectsManagement: React.FC = () => {
               </div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="github_link" className="text-right">GitHub Link</Label><Input id="github_link" value={newProject.github_link} onChange={(e) => setNewProject({ ...newProject, github_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="live_link" className="text-right">Live Link</Label><Input id="live_link" value={newProject.live_link} onChange={(e) => setNewProject({ ...newProject, live_link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              
               <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="imageFile" className="text-right pt-2">Image</Label>
+                <Label className="text-right pt-2">Image Source</Label>
                 <div className="col-span-3">
-                  <div className="flex items-center gap-4">
-                    <Input id="imageFile" type="file" accept="image/*" onChange={handleFileChange} className="flex-grow bg-input/50 border-border/50 focus:border-primary" ref={fileInputRef} />
-                    <Button type="button" onClick={handleUploadClick} disabled={uploadFileMutation.isPending || !selectedFile}>
-                      <UploadCloud className="mr-2 h-4 w-4" />
-                      {uploadFileMutation.isPending ? "..." : "Upload"}
-                    </Button>
-                  </div>
+                  <RadioGroup
+                    value={imageSourceType}
+                    onValueChange={(value: 'url' | 'upload') => setImageSourceType(value)}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="url" id="project-image-source-url" />
+                      <Label htmlFor="project-image-source-url" className="flex items-center gap-1">
+                        <Link className="h-4 w-4" /> URL
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="upload" id="project-image-source-upload" />
+                      <Label htmlFor="project-image-source-upload" className="flex items-center gap-1">
+                        <UploadCloud className="h-4 w-4" /> Upload
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {imageSourceType === 'url' ? (
+                    <div className="mt-4">
+                      <Label htmlFor="projectImageUrl">Image URL</Label>
+                      <Input
+                        id="projectImageUrl"
+                        type="url"
+                        value={newProject.image}
+                        onChange={(e) => setNewProject({ ...newProject, image: e.target.value })}
+                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <Label htmlFor="projectImageFile">Upload Image</Label>
+                      <div className="mt-2 flex items-center gap-4">
+                        <Input
+                          id="projectImageFile"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                          ref={fileInputRef}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleUploadClick}
+                          disabled={uploadFileMutation.isPending || !selectedFile}
+                        >
+                          <UploadCloud className="mr-2 h-4 w-4" />
+                          {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {newProject.image && (
-                    <div className="mt-2">
-                      <img src={newProject.image} alt="Project preview" className="rounded-md w-32 h-32 object-cover" />
+                    <div className="mt-4 flex flex-col items-start gap-2">
+                      <Label>Current Image Preview</Label>
+                      <img src={newProject.image} alt="Project preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
+                      <div className="flex gap-2 mt-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit Image
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" onClick={() => deleteProjectMutation.mutate(newProject.id)} disabled={deleteProjectMutation.isPending}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
+
               <DialogFooter><Button type="submit" disabled={addProjectMutation.isPending || updateProjectMutation.isPending}>{editingProject ? (updateProjectMutation.isPending ? "Saving..." : "Save Changes") : (addProjectMutation.isPending ? "Adding..." : "Add Project")}</Button></DialogFooter>
             </form>
           </DialogContent>
@@ -381,6 +473,17 @@ const ProjectsManagement: React.FC = () => {
           </DndContext>
         </Table>
       </div>
+
+      {newProject.image && (
+        <ImageEditorDialog
+          isOpen={isImageEditorOpen}
+          onClose={() => setIsImageEditorOpen(false)}
+          imageUrl={newProject.image}
+          onSave={handleImageEditorSave}
+          onDelete={handleImageEditorDelete}
+          isSaving={uploadFileMutation.isPending || deleteProjectMutation.isPending}
+        />
+      )}
     </div>
   );
 };

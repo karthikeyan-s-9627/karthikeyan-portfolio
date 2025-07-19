@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2, UploadCloud, Image, Link, Trash2, Edit } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import ImageEditorDialog from "@/components/ImageEditorDialog"; // Import the new component
 
 interface AboutMeContent {
   id: string;
@@ -31,6 +33,8 @@ const AboutMeManagement: React.FC = () => {
   const [imageUrl, setImageUrl] = React.useState("");
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload'>('url');
+  const [isImageEditorOpen, setIsImageEditorOpen] = React.useState(false);
 
   const { data, isLoading, error } = useQuery<AboutMeContent, Error>({
     queryKey: ["about_me"],
@@ -58,6 +62,7 @@ const AboutMeManagement: React.FC = () => {
     if (data) {
       setContent(data.content ?? DEFAULT_ABOUT_ME_CONTENT.content);
       setImageUrl(data.image_url ?? DEFAULT_ABOUT_ME_CONTENT.image_url);
+      setImageSourceType(data.image_url ? 'url' : 'upload'); // Set initial source type
     }
   }, [data]);
 
@@ -83,7 +88,7 @@ const AboutMeManagement: React.FC = () => {
     mutationFn: async (file) => {
       const fileExtension = file.name.split('.').pop();
       const fileName = `${ABOUT_ME_SINGLETON_ID}-about.${fileExtension}`;
-      const filePath = `${fileName}`; // Bucket is now public, no need for 'public/' prefix if policies are set on bucket
+      const filePath = `${fileName}`;
       
       const { error: uploadError } = await supabase.storage
         .from("images")
@@ -110,9 +115,37 @@ const AboutMeManagement: React.FC = () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      setIsImageEditorOpen(false); // Close editor after successful upload
     },
     onError: (err) => {
       showError(`Error uploading file: ${err.message}`);
+    },
+  });
+
+  const deleteImageMutation = useMutation<null, Error, string, unknown>({
+    mutationFn: async (filePath) => {
+      if (filePath.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+        const fileName = filePath.split('/').pop();
+        if (fileName) {
+          const { error: deleteError } = await supabase.storage
+            .from("images")
+            .remove([fileName]);
+          if (deleteError) throw deleteError;
+        }
+      }
+      await upsertAboutMeMutation.mutateAsync({ image_url: null });
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["about_me"] });
+      showSuccess("Image deleted successfully!");
+      setImageUrl("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setIsImageEditorOpen(false); // Close editor after deletion
+    },
+    onError: (err) => {
+      showError(`Error deleting image: ${err.message}`);
     },
   });
 
@@ -134,6 +167,17 @@ const AboutMeManagement: React.FC = () => {
       uploadFileMutation.mutate(selectedFile);
     } else {
       showError("Please select a file to upload.");
+    }
+  };
+
+  const handleImageEditorSave = (croppedBlob: Blob) => {
+    const croppedFile = new File([croppedBlob], `${ABOUT_ME_SINGLETON_ID}-about-cropped.jpeg`, { type: "image/jpeg" });
+    uploadFileMutation.mutate(croppedFile);
+  };
+
+  const handleImageEditorDelete = () => {
+    if (imageUrl) {
+      deleteImageMutation.mutate(imageUrl);
     }
   };
 
@@ -160,28 +204,73 @@ const AboutMeManagement: React.FC = () => {
               />
             </div>
             <div>
-              <Label htmlFor="imageFile">Image</Label>
-              <div className="mt-2 flex items-center gap-4">
-                <Input
-                  id="imageFile"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="flex-grow bg-input/50 border-border/50 focus:border-primary"
-                  ref={fileInputRef}
-                />
-                <Button
-                  type="button"
-                  onClick={handleUploadClick}
-                  disabled={uploadFileMutation.isPending || !selectedFile}
-                >
-                  <UploadCloud className="mr-2 h-4 w-4" />
-                  {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
-                </Button>
-              </div>
-              {imageUrl && (
+              <Label>Image Source</Label>
+              <RadioGroup
+                value={imageSourceType}
+                onValueChange={(value: 'url' | 'upload') => setImageSourceType(value)}
+                className="flex space-x-4 mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="url" id="image-source-url" />
+                  <Label htmlFor="image-source-url" className="flex items-center gap-1">
+                    <Link className="h-4 w-4" /> URL
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="upload" id="image-source-upload" />
+                  <Label htmlFor="image-source-upload" className="flex items-center gap-1">
+                    <UploadCloud className="h-4 w-4" /> Upload
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              {imageSourceType === 'url' ? (
                 <div className="mt-4">
-                  <img src={imageUrl} alt="About me preview" className="rounded-md w-48 h-48 object-cover" />
+                  <Label htmlFor="imageUrl">Image URL</Label>
+                  <Input
+                    id="imageUrl"
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                  />
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <Label htmlFor="imageFile">Upload Image</Label>
+                  <div className="mt-2 flex items-center gap-4">
+                    <Input
+                      id="imageFile"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                      ref={fileInputRef}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleUploadClick}
+                      disabled={uploadFileMutation.isPending || !selectedFile}
+                    >
+                      <UploadCloud className="mr-2 h-4 w-4" />
+                      {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {imageUrl && (
+                <div className="mt-4 flex flex-col items-start gap-2">
+                  <Label>Current Image Preview</Label>
+                  <img src={imageUrl} alt="About me preview" className="rounded-md w-48 h-48 object-cover border border-border/50" />
+                  <div className="flex gap-2 mt-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                      <Edit className="mr-2 h-4 w-4" /> Edit Image
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => deleteImageMutation.mutate(imageUrl)} disabled={deleteImageMutation.isPending}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -191,6 +280,17 @@ const AboutMeManagement: React.FC = () => {
           </form>
         </CardContent>
       </Card>
+
+      {imageUrl && (
+        <ImageEditorDialog
+          isOpen={isImageEditorOpen}
+          onClose={() => setIsImageEditorOpen(false)}
+          imageUrl={imageUrl}
+          onSave={handleImageEditorSave}
+          onDelete={handleImageEditorDelete}
+          isSaving={uploadFileMutation.isPending || deleteImageMutation.isPending}
+        />
+      )}
     </div>
   );
 };

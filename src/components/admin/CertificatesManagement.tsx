@@ -24,7 +24,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud } from "lucide-react";
+import { PlusCircle, Trash2, Edit, GripVertical, UploadCloud, Link } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -40,6 +40,8 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import ImageEditorDialog from "@/components/ImageEditorDialog"; // Import the new component
 
 interface Certificate {
   id: string;
@@ -101,6 +103,8 @@ const CertificatesManagement: React.FC = () => {
   const [editingCertificate, setEditingCertificate] = React.useState<Certificate | null>(null);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload'>('url');
+  const [isImageEditorOpen, setIsImageEditorOpen] = React.useState(false);
 
   const { data: certificates, isLoading, error } = useQuery<Certificate[], Error>({
     queryKey: ["certificates"],
@@ -146,6 +150,7 @@ const CertificatesManagement: React.FC = () => {
       setNewCertificate({ id: "", title: "", issuer: "", date: "", description: "", link: "", image: "" });
       setSelectedFile(null);
       if(fileInputRef.current) fileInputRef.current.value = "";
+      setImageSourceType('url'); // Reset to URL when dialog closes
     }
   }, [isDialogOpen]);
 
@@ -185,6 +190,16 @@ const CertificatesManagement: React.FC = () => {
 
   const deleteCertificateMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (id) => {
+      const certificateToDelete = displayCertificates.find(c => c.id === id);
+      if (certificateToDelete?.image && certificateToDelete.image.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+        const fileName = certificateToDelete.image.split('/').pop();
+        if (fileName) {
+          const { error: deleteError } = await supabase.storage
+            .from("images")
+            .remove([fileName]);
+          if (deleteError) throw deleteError;
+        }
+      }
       const { error } = await supabase.from("certificates").delete().eq("id", id);
       if (error) throw error;
       return null;
@@ -192,6 +207,7 @@ const CertificatesManagement: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
       showSuccess("Certificate deleted successfully!");
+      setIsImageEditorOpen(false); // Close editor if the certificate's image was being edited
     },
     onError: (err) => {
       showError(`Error deleting certificate: ${err.message}`);
@@ -225,6 +241,7 @@ const CertificatesManagement: React.FC = () => {
       showSuccess("Image uploaded successfully!");
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      setIsImageEditorOpen(false); // Close editor after successful upload
     },
     onError: (err) => {
       showError(`Error uploading file: ${err.message}`);
@@ -247,6 +264,7 @@ const CertificatesManagement: React.FC = () => {
     setNewCertificate({
       id: certificate.id, title: certificate.title, issuer: certificate.issuer, date: certificate.date, description: certificate.description, link: certificate.link || "", image: certificate.image || "",
     });
+    setImageSourceType(certificate.image ? 'url' : 'upload'); // Set initial source type based on existing image
     setIsDialogOpen(true);
   };
 
@@ -255,6 +273,7 @@ const CertificatesManagement: React.FC = () => {
     setNewCertificate({
       id: crypto.randomUUID(), title: "", issuer: "", date: "", description: "", link: "", image: "",
     });
+    setImageSourceType('upload'); // Default to upload for new items
     setIsDialogOpen(true);
   };
 
@@ -271,6 +290,21 @@ const CertificatesManagement: React.FC = () => {
       uploadFileMutation.mutate({ file: selectedFile, certificateId: newCertificate.id });
     } else {
       showError("Please select a file to upload.");
+    }
+  };
+
+  const handleImageEditorSave = (croppedBlob: Blob) => {
+    if (newCertificate.id) {
+      const croppedFile = new File([croppedBlob], `${newCertificate.id}-certificate-cropped.jpeg`, { type: "image/jpeg" });
+      uploadFileMutation.mutate({ file: croppedFile, certificateId: newCertificate.id });
+    } else {
+      showError("Certificate ID is missing for image upload.");
+    }
+  };
+
+  const handleImageEditorDelete = () => {
+    if (newCertificate.id) {
+      deleteCertificateMutation.mutate(newCertificate.id);
     }
   };
 
@@ -309,23 +343,81 @@ const CertificatesManagement: React.FC = () => {
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="date" className="text-right">Date</Label><Input id="date" value={newCertificate.date} onChange={(e) => setNewCertificate({ ...newCertificate, date: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="description" className="text-right">Description</Label><Textarea id="description" value={newCertificate.description} onChange={(e) => setNewCertificate({ ...newCertificate, description: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="link" className="text-right">Link</Label><Input id="link" value={newCertificate.link} onChange={(e) => setNewCertificate({ ...newCertificate, link: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
+              
               <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="imageFile" className="text-right pt-2">Image</Label>
+                <Label className="text-right pt-2">Image Source</Label>
                 <div className="col-span-3">
-                  <div className="flex items-center gap-4">
-                    <Input id="imageFile" type="file" accept="image/*" onChange={handleFileChange} className="flex-grow bg-input/50 border-border/50 focus:border-primary" ref={fileInputRef} />
-                    <Button type="button" onClick={handleUploadClick} disabled={uploadFileMutation.isPending || !selectedFile}>
-                      <UploadCloud className="mr-2 h-4 w-4" />
-                      {uploadFileMutation.isPending ? "..." : "Upload"}
-                    </Button>
-                  </div>
+                  <RadioGroup
+                    value={imageSourceType}
+                    onValueChange={(value: 'url' | 'upload') => setImageSourceType(value)}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="url" id="cert-image-source-url" />
+                      <Label htmlFor="cert-image-source-url" className="flex items-center gap-1">
+                        <Link className="h-4 w-4" /> URL
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="upload" id="cert-image-source-upload" />
+                      <Label htmlFor="cert-image-source-upload" className="flex items-center gap-1">
+                        <UploadCloud className="h-4 w-4" /> Upload
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {imageSourceType === 'url' ? (
+                    <div className="mt-4">
+                      <Label htmlFor="certImageUrl">Image URL</Label>
+                      <Input
+                        id="certImageUrl"
+                        type="url"
+                        value={newCertificate.image}
+                        onChange={(e) => setNewCertificate({ ...newCertificate, image: e.target.value })}
+                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <Label htmlFor="certImageFile">Upload Image</Label>
+                      <div className="mt-2 flex items-center gap-4">
+                        <Input
+                          id="certImageFile"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                          ref={fileInputRef}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleUploadClick}
+                          disabled={uploadFileMutation.isPending || !selectedFile}
+                        >
+                          <UploadCloud className="mr-2 h-4 w-4" />
+                          {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {newCertificate.image && (
-                    <div className="mt-2">
-                      <img src={newCertificate.image} alt="Certificate preview" className="rounded-md w-32 h-32 object-cover" />
+                    <div className="mt-4 flex flex-col items-start gap-2">
+                      <Label>Current Image Preview</Label>
+                      <img src={newCertificate.image} alt="Certificate preview" className="rounded-md w-32 h-32 object-cover border border-border/50" />
+                      <div className="flex gap-2 mt-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit Image
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" onClick={() => deleteCertificateMutation.mutate(newCertificate.id)} disabled={deleteCertificateMutation.isPending}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
+
               <DialogFooter><Button type="submit" disabled={addCertificateMutation.isPending || updateCertificateMutation.isPending}>{editingCertificate ? (updateCertificateMutation.isPending ? "Saving..." : "Save Changes") : (addCertificateMutation.isPending ? "Adding..." : "Add Certificate")}</Button></DialogFooter>
             </form>
           </DialogContent>
@@ -354,6 +446,17 @@ const CertificatesManagement: React.FC = () => {
           </DndContext>
         </Table>
       </div>
+
+      {newCertificate.image && (
+        <ImageEditorDialog
+          isOpen={isImageEditorOpen}
+          onClose={() => setIsImageEditorOpen(false)}
+          imageUrl={newCertificate.image}
+          onSave={handleImageEditorSave}
+          onDelete={handleImageEditorDelete}
+          isSaving={uploadFileMutation.isPending || deleteCertificateMutation.isPending}
+        />
+      )}
     </div>
   );
 };

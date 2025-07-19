@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2, UploadCloud, Image, Link, Trash2, Edit } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import ImageEditorDialog from "@/components/ImageEditorDialog"; // Import the new component
 
 interface Profile {
   id: string;
@@ -36,6 +38,8 @@ const HeroManagement: React.FC = () => {
   const [userEmail, setUserEmail] = React.useState<string | null>(null);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [imageSourceType, setImageSourceType] = React.useState<'url' | 'upload'>('url');
+  const [isImageEditorOpen, setIsImageEditorOpen] = React.useState(false);
 
   React.useEffect(() => {
     const getSession = async () => {
@@ -77,6 +81,7 @@ const HeroManagement: React.FC = () => {
       setLastName(profile.last_name ?? DEFAULT_HERO_PROFILE.last_name);
       setTagline(profile.tagline ?? DEFAULT_HERO_PROFILE.tagline);
       setHeroImageUrl(profile.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url);
+      setImageSourceType(profile.hero_image_url ? 'url' : 'upload'); // Set initial source type
     }
   }, [profile]);
 
@@ -135,9 +140,37 @@ const HeroManagement: React.FC = () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      setIsImageEditorOpen(false); // Close editor after successful upload
     },
     onError: (err) => {
       showError(`Error uploading file: ${err.message}`);
+    },
+  });
+
+  const deleteImageMutation = useMutation<null, Error, string, unknown>({
+    mutationFn: async (filePath) => {
+      if (filePath.includes(supabase.storage.from("images").getPublicUrl("").data.publicUrl)) {
+        const fileName = filePath.split('/').pop();
+        if (fileName) {
+          const { error: deleteError } = await supabase.storage
+            .from("images")
+            .remove([fileName]);
+          if (deleteError) throw deleteError;
+        }
+      }
+      await updateProfileMutation.mutateAsync({ hero_image_url: null });
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", userId] });
+      showSuccess("Image deleted successfully!");
+      setHeroImageUrl("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setIsImageEditorOpen(false); // Close editor after deletion
+    },
+    onError: (err) => {
+      showError(`Error deleting image: ${err.message}`);
     },
   });
 
@@ -164,6 +197,17 @@ const HeroManagement: React.FC = () => {
       uploadFileMutation.mutate(selectedFile);
     } else {
       showError("Please select a file to upload.");
+    }
+  };
+
+  const handleImageEditorSave = (croppedBlob: Blob) => {
+    const croppedFile = new File([croppedBlob], `${userId}-hero-cropped.jpeg`, { type: "image/jpeg" });
+    uploadFileMutation.mutate(croppedFile);
+  };
+
+  const handleImageEditorDelete = () => {
+    if (heroImageUrl) {
+      deleteImageMutation.mutate(heroImageUrl);
     }
   };
 
@@ -210,28 +254,73 @@ const HeroManagement: React.FC = () => {
               />
             </div>
             <div>
-              <Label htmlFor="heroImageFile">Hero Image</Label>
-              <div className="mt-2 flex items-center gap-4">
-                <Input
-                  id="heroImageFile"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="flex-grow bg-input/50 border-border/50 focus:border-primary"
-                  ref={fileInputRef}
-                />
-                <Button
-                  type="button"
-                  onClick={handleUploadClick}
-                  disabled={uploadFileMutation.isPending || !selectedFile}
-                >
-                  <UploadCloud className="mr-2 h-4 w-4" />
-                  {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
-                </Button>
-              </div>
-              {heroImageUrl && (
+              <Label>Hero Image Source</Label>
+              <RadioGroup
+                value={imageSourceType}
+                onValueChange={(value: 'url' | 'upload') => setImageSourceType(value)}
+                className="flex space-x-4 mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="url" id="hero-image-source-url" />
+                  <Label htmlFor="hero-image-source-url" className="flex items-center gap-1">
+                    <Link className="h-4 w-4" /> URL
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="upload" id="hero-image-source-upload" />
+                  <Label htmlFor="hero-image-source-upload" className="flex items-center gap-1">
+                    <UploadCloud className="h-4 w-4" /> Upload
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              {imageSourceType === 'url' ? (
                 <div className="mt-4">
-                  <img src={heroImageUrl} alt="Hero preview" className="rounded-full w-48 h-48 object-cover" />
+                  <Label htmlFor="heroImageUrl">Hero Image URL</Label>
+                  <Input
+                    id="heroImageUrl"
+                    type="url"
+                    value={heroImageUrl}
+                    onChange={(e) => setHeroImageUrl(e.target.value)}
+                    className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                  />
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <Label htmlFor="heroImageFile">Upload Hero Image</Label>
+                  <div className="mt-2 flex items-center gap-4">
+                    <Input
+                      id="heroImageFile"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="flex-grow bg-input/50 border-border/50 focus:border-primary"
+                      ref={fileInputRef}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleUploadClick}
+                      disabled={uploadFileMutation.isPending || !selectedFile}
+                    >
+                      <UploadCloud className="mr-2 h-4 w-4" />
+                      {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {heroImageUrl && (
+                <div className="mt-4 flex flex-col items-start gap-2">
+                  <Label>Current Hero Image Preview</Label>
+                  <img src={heroImageUrl} alt="Hero preview" className="rounded-full w-48 h-48 object-cover border border-border/50" />
+                  <div className="flex gap-2 mt-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setIsImageEditorOpen(true)}>
+                      <Edit className="mr-2 h-4 w-4" /> Edit Image
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => deleteImageMutation.mutate(heroImageUrl)} disabled={deleteImageMutation.isPending}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Image
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -241,6 +330,17 @@ const HeroManagement: React.FC = () => {
           </form>
         </CardContent>
       </Card>
+
+      {heroImageUrl && (
+        <ImageEditorDialog
+          isOpen={isImageEditorOpen}
+          onClose={() => setIsImageEditorOpen(false)}
+          imageUrl={heroImageUrl}
+          onSave={handleImageEditorSave}
+          onDelete={handleImageEditorDelete}
+          isSaving={uploadFileMutation.isPending || deleteImageMutation.isPending}
+        />
+      )}
     </div>
   );
 };
