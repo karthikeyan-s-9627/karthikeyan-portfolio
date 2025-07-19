@@ -88,7 +88,7 @@ const AboutMeManagement: React.FC = () => {
         <CardHeader>
           <CardTitle>Edit Your Introduction</CardTitle>
         </CardHeader>
-        <CardContent className="p-6 max-h-[calc(100vh-280px)] overflow-y-auto">
+        <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="content">About Me Content</Label>
