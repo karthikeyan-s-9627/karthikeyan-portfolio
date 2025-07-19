@@ -344,7 +344,7 @@ const Home = () => {
   }
 
   return (
-    <div className="space-y-24 lg:space-y-32">
+    <div className="space-y-16 lg:space-y-24"> {/* Reduced space-y from 24/32 to 16/24 */}
       {/* Hero Section */}
       <section id="home" className="min-h-[calc(100vh-120px)] flex flex-col lg:flex-row items-center justify-center text-center lg:text-left p-4 pt-20 lg:pt-0">
         <div className="flex-1 flex flex-col items-center lg:items-start justify-center">
