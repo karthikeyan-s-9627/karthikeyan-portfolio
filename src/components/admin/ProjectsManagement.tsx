@@ -444,7 +444,7 @@ const ProjectsManagement: React.FC = () => {
         <h2 className="text-2xl font-bold text-foreground">Manage Projects</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild><Button onClick={handleOpenNewDialog}><PlusCircle className="mr-2 h-4 w-4" /> Add New Project</Button></DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] bg-card border-border/50">
+          <DialogContent className="sm:max-w-[600px] bg-card border-border/50 max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>

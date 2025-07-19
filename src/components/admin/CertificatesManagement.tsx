@@ -153,7 +153,7 @@ const CertificatesManagement: React.FC = () => {
       setEditingCertificate(null);
       setNewCertificate({ id: "", title: "", issuer: "", date: "", description: "", link: "", image: "", image_width: "", image_height: "" }); // Reset image dimensions
       setSelectedFile(null);
-      if(fileInputRef.current) fileInputInputRef.current.value = "";
+      if(fileInputRef.current) fileInputRef.current.value = "";
       setImageSourceType('url');
       setLocalImageFileName(""); // Clear local filename
     }
@@ -425,7 +425,7 @@ const CertificatesManagement: React.FC = () => {
         <h2 className="text-2xl font-bold text-foreground">Manage Certificates</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild><Button onClick={handleOpenNewDialog}><PlusCircle className="mr-2 h-4 w-4" /> Add New Certificate</Button></DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] bg-card border-border/50">
+          <DialogContent className="sm:max-w-[600px] bg-card border-border/50 max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editingCertificate ? "Edit Certificate" : "Add New Certificate"}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="title" className="text-right">Title</Label><Input id="title" value={newCertificate.title} onChange={(e) => setNewCertificate({ ...newCertificate, title: e.target.value })} className="col-span-3 bg-input/50 border-border/50 focus:border-primary" /></div>
