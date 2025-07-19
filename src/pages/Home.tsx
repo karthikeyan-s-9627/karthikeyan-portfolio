@@ -49,9 +49,6 @@ interface Project {
 interface AboutMeContent {
   id: string;
   content: string;
-  image_url?: string;
-  image_width?: string; // Added
-  image_height?: string; // Added
   updated_at: string;
 }
 
@@ -227,7 +224,7 @@ const Home = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("about_me")
-        .select("*, image_width, image_height")
+        .select("*")
         .eq("id", ABOUT_ME_SINGLETON_ID)
         .single();
       if (error) {
@@ -235,9 +232,6 @@ const Home = () => {
           return {
             id: ABOUT_ME_SINGLETON_ID,
             content: "Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.\n\nMy academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.\n\nOutside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.",
-            image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image",
-            image_width: "400px", // Default
-            image_height: "400px", // Default
             updated_at: new Date().toISOString(),
           };
         }
@@ -430,7 +424,7 @@ const Home = () => {
           <div className="text-center text-destructive">Error loading About Me content: {aboutMeError.message}</div>
         ) : (
           <motion.div
-            className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8"
+            className="w-full max-w-4xl grid grid-cols-1 gap-8" // Changed to single column
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -452,22 +446,7 @@ const Home = () => {
                 </CardContent>
               </Card>
             </motion.div>
-            <motion.div variants={cardVariants} className="hidden md:flex items-center justify-center">
-              {aboutMe?.image_url && (
-                <img
-                  src={aboutMe.image_url}
-                  alt="About John Doe"
-                  className="rounded-lg object-cover shadow-2xl border-4 border-primary/50
-                    hover:scale-105 transition-transform duration-500 ease-in-out"
-                  style={{
-                    width: aboutMe?.image_width || '100%', // Apply custom width or default
-                    height: aboutMe?.image_height || 'auto', // Apply custom height or default
-                    maxWidth: '400px', // Keep max-width for responsiveness
-                    maxHeight: '400px', // Keep max-height for responsiveness
-                  }}
-                />
-              )}
-            </motion.div>
+            {/* Removed image display div */}
           </motion.div>
         )}
       </section>
