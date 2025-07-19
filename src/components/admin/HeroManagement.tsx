@@ -20,6 +20,8 @@ interface Profile {
   last_name?: string;
   tagline?: string;
   hero_image_url?: string;
+  image_width?: string; // Added
+  image_height?: string; // Added
 }
 
 const DEFAULT_HERO_PROFILE = {
@@ -27,6 +29,8 @@ const DEFAULT_HERO_PROFILE = {
   last_name: "Doe",
   tagline: "A passionate college student building innovative solutions and exploring the frontiers of technology.",
   hero_image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image",
+  image_width: "400px", // Default
+  image_height: "400px", // Default
 };
 
 const HeroManagement: React.FC = () => {
@@ -35,6 +39,8 @@ const HeroManagement: React.FC = () => {
   const [lastName, setLastName] = React.useState("");
   const [tagline, setTagline] = React.useState("");
   const [heroImageUrl, setHeroImageUrl] = React.useState(""); // This will hold the final URL or path
+  const [imageWidth, setImageWidth] = React.useState(""); // Added
+  const [imageHeight, setImageHeight] = React.useState(""); // Added
   const [localImageFileName, setLocalImageFileName] = React.useState(""); // For local path input
   const [userId, setUserId] = React.useState<string | null>(null);
   const [userEmail, setUserEmail] = React.useState<string | null>(null);
@@ -60,7 +66,7 @@ const HeroManagement: React.FC = () => {
       if (!userId) throw new Error("User ID not available.");
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, tagline, hero_image_url")
+        .select("id, first_name, last_name, tagline, hero_image_url, image_width, image_height") // Added image_width, image_height
         .eq("id", userId)
         .single();
       if (error) {
@@ -82,6 +88,9 @@ const HeroManagement: React.FC = () => {
       setFirstName(profile.first_name ?? DEFAULT_HERO_PROFILE.first_name);
       setLastName(profile.last_name ?? DEFAULT_HERO_PROFILE.last_name);
       setTagline(profile.tagline ?? DEFAULT_HERO_PROFILE.tagline);
+      setHeroImageUrl(profile.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url);
+      setImageWidth(profile.image_width ?? DEFAULT_HERO_PROFILE.image_width); // Added
+      setImageHeight(profile.image_height ?? DEFAULT_HERO_PROFILE.image_height); // Added
       
       const fetchedHeroImageUrl = profile.hero_image_url ?? DEFAULT_HERO_PROFILE.hero_image_url;
       setHeroImageUrl(fetchedHeroImageUrl);
@@ -169,7 +178,9 @@ const HeroManagement: React.FC = () => {
         first_name: firstName,
         last_name: lastName,
         tagline: tagline,
-        hero_image_url: publicUrlData.publicUrl
+        hero_image_url: publicUrlData.publicUrl,
+        image_width: imageWidth, // Added
+        image_height: imageHeight, // Added
       });
 
       return publicUrlData.publicUrl;
@@ -196,6 +207,8 @@ const HeroManagement: React.FC = () => {
           last_name: lastName,
           tagline: tagline,
           hero_image_url: null,
+          image_width: imageWidth, // Preserve existing dimensions
+          image_height: imageHeight, // Preserve existing dimensions
         });
         return null;
       }
@@ -230,6 +243,8 @@ const HeroManagement: React.FC = () => {
         last_name: lastName,
         tagline: tagline,
         hero_image_url: null,
+        image_width: imageWidth, // Preserve existing dimensions
+        image_height: imageHeight, // Preserve existing dimensions
       });
       return null;
     },
@@ -254,6 +269,8 @@ const HeroManagement: React.FC = () => {
       last_name: lastName,
       tagline: tagline,
       hero_image_url: heroImageUrl, // Use heroImageUrl directly
+      image_width: imageWidth, // Added
+      image_height: imageHeight, // Added
     });
   };
 
@@ -453,6 +470,30 @@ const HeroManagement: React.FC = () => {
                 </div>
               )}
             </div>
+            {heroImageUrl && ( // Only show size inputs if an image is present
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="imageWidth">Image Width (e.g., 400px, 20rem, 50%)</Label>
+                  <Input
+                    id="imageWidth"
+                    value={imageWidth}
+                    onChange={(e) => setImageWidth(e.target.value)}
+                    className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                    placeholder="e.g., 400px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="imageHeight">Image Height (e.g., 400px, 20rem, auto)</Label>
+                  <Input
+                    id="imageHeight"
+                    value={imageHeight}
+                    onChange={(e) => setImageHeight(e.target.value)}
+                    className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                    placeholder="e.g., 400px"
+                  />
+                </div>
+              </div>
+            )}
             <Button type="submit" disabled={updateProfileMutation.isPending}>
               {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>

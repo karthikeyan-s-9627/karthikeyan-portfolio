@@ -53,6 +53,8 @@ interface Project {
   github_link?: string;
   live_link?: string;
   image?: string;
+  image_width?: string; // Added
+  image_height?: string; // Added
   position: number | null;
 }
 
@@ -104,7 +106,7 @@ const ProjectsManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [displayProjects, setDisplayProjects] = React.useState<Project[]>([]);
   const [newProject, setNewProject] = React.useState<Omit<Project, "position">>({
-    id: "", title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
+    id: "", title: "", description: "", technologies: [], github_link: "", live_link: "", image: "", image_width: "", image_height: "", // Added
   });
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingProject, setEditingProject] = React.useState<Project | null>(null);
@@ -118,7 +120,7 @@ const ProjectsManagement: React.FC = () => {
   const { data: projects, isLoading, error } = useQuery<Project[], Error>({
     queryKey: ["projects"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*").order("position", { ascending: true, nullsFirst: false });
+      const { data, error } = await supabase.from("projects").select("*, image_width, image_height").order("position", { ascending: true, nullsFirst: false }); // Added image_width, image_height
       if (error) throw error;
       return data;
     },
@@ -156,7 +158,7 @@ const ProjectsManagement: React.FC = () => {
   React.useEffect(() => {
     if (!isDialogOpen) {
       setEditingProject(null);
-      setNewProject({ id: "", title: "", description: "", technologies: [], github_link: "", live_link: "", image: "" });
+      setNewProject({ id: "", title: "", description: "", technologies: [], github_link: "", live_link: "", image: "", image_width: "", image_height: "" }); // Reset image dimensions
       setTechInput("");
       setSelectedFile(null);
       if(fileInputRef.current) fileInputRef.current.value = "";
@@ -191,7 +193,7 @@ const ProjectsManagement: React.FC = () => {
   const updateProjectMutation = useMutation<null, Error, Omit<Project, 'position'>, unknown>({
     mutationFn: async (project) => {
       const { error } = await supabase.from("projects").update({
-        title: project.title, description: project.description, technologies: project.technologies, github_link: project.github_link, live_link: project.live_link, image: project.image,
+        title: project.title, description: project.description, technologies: project.technologies, github_link: project.github_link, live_link: project.live_link, image: project.image, image_width: project.image_width, image_height: project.image_height, // Added
       }).eq("id", project.id);
       if (error) throw error;
       return null;
@@ -248,7 +250,16 @@ const ProjectsManagement: React.FC = () => {
         }
       }
       // Update the project record to set image to null regardless of source
-      const { error: updateError } = await supabase.from("projects").update({ image: null, title: projectToUpdate.title, description: projectToUpdate.description, technologies: projectToUpdate.technologies, github_link: projectToUpdate.github_link, live_link: projectToUpdate.live_link }).eq("id", projectId);
+      const { error: updateError } = await supabase.from("projects").update({ 
+        image: null, 
+        title: projectToUpdate.title, 
+        description: projectToUpdate.description, 
+        technologies: projectToUpdate.technologies, 
+        github_link: projectToUpdate.github_link, 
+        live_link: projectToUpdate.live_link,
+        image_width: projectToUpdate.image_width, // Preserve existing dimensions
+        image_height: projectToUpdate.image_height, // Preserve existing dimensions
+      }).eq("id", projectId);
       if (updateError) throw updateError;
       return null;
     },
@@ -338,7 +349,15 @@ const ProjectsManagement: React.FC = () => {
   const handleEditClick = (project: Project) => {
     setEditingProject(project);
     setNewProject({
-      id: project.id, title: project.title, description: project.description, technologies: project.technologies || [], github_link: project.github_link || "", live_link: project.live_link || "", image: project.image || "",
+      id: project.id, 
+      title: project.title, 
+      description: project.description, 
+      technologies: project.technologies || [], 
+      github_link: project.github_link || "", 
+      live_link: project.live_link || "", 
+      image: project.image || "",
+      image_width: project.image_width || "", // Added
+      image_height: project.image_height || "", // Added
     });
     // Determine image source type based on fetched URL
     if (project.image?.startsWith('/images/')) {
@@ -355,7 +374,7 @@ const ProjectsManagement: React.FC = () => {
   const handleOpenNewDialog = () => {
     setEditingProject(null);
     setNewProject({
-      id: crypto.randomUUID(), title: "", description: "", technologies: [], github_link: "", live_link: "", image: "",
+      id: crypto.randomUUID(), title: "", description: "", technologies: [], github_link: "", live_link: "", image: "", image_width: "", image_height: "", // Reset image dimensions
     });
     setImageSourceType('upload'); // Default to upload for new projects
     setLocalImageFileName("");
@@ -567,6 +586,33 @@ const ProjectsManagement: React.FC = () => {
                   )}
                 </div>
               </div>
+              {newProject.image && ( // Only show size inputs if an image is present
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Image Size</Label>
+                  <div className="col-span-3 grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="imageWidth">Width</Label>
+                      <Input
+                        id="imageWidth"
+                        value={newProject.image_width}
+                        onChange={(e) => setNewProject({ ...newProject, image_width: e.target.value })}
+                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                        placeholder="e.g., 300px"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="imageHeight">Height</Label>
+                      <Input
+                        id="imageHeight"
+                        value={newProject.image_height}
+                        onChange={(e) => setNewProject({ ...newProject, image_height: e.target.value })}
+                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                        placeholder="e.g., 200px"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <DialogFooter><Button type="submit" disabled={addProjectMutation.isPending || updateProjectMutation.isPending}>{editingProject ? (updateProjectMutation.isPending ? "Saving..." : "Save Changes") : (addProjectMutation.isPending ? "Adding..." : "Add Project")}</Button></DialogFooter>
             </form>

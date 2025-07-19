@@ -18,6 +18,8 @@ interface AboutMeContent {
   id: string;
   content: string;
   image_url?: string;
+  image_width?: string; // Added
+  image_height?: string; // Added
   updated_at: string;
 }
 
@@ -26,12 +28,16 @@ const ABOUT_ME_SINGLETON_ID = "00000000-0000-0000-0000-000000000001";
 const DEFAULT_ABOUT_ME_CONTENT = {
   content: "Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.\n\nMy academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.\n\nOutside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.",
   image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image",
+  image_width: "400px", // Default
+  image_height: "400px", // Default
 };
 
 const AboutMeManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [content, setContent] = React.useState("");
   const [imageUrl, setImageUrl] = React.useState(""); // This will hold the final URL or path
+  const [imageWidth, setImageWidth] = React.useState(""); // Added
+  const [imageHeight, setImageHeight] = React.useState(""); // Added
   const [localImageFileName, setLocalImageFileName] = React.useState(""); // For local path input
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -43,7 +49,7 @@ const AboutMeManagement: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("about_me")
-        .select("*")
+        .select("*, image_width, image_height") // Added image_width, image_height
         .eq("id", ABOUT_ME_SINGLETON_ID)
         .single();
       if (error) {
@@ -65,6 +71,8 @@ const AboutMeManagement: React.FC = () => {
       setContent(data.content ?? DEFAULT_ABOUT_ME_CONTENT.content);
       const fetchedImageUrl = data.image_url ?? DEFAULT_ABOUT_ME_CONTENT.image_url;
       setImageUrl(fetchedImageUrl);
+      setImageWidth(data.image_width ?? DEFAULT_ABOUT_ME_CONTENT.image_width); // Added
+      setImageHeight(data.image_height ?? DEFAULT_ABOUT_ME_CONTENT.image_height); // Added
 
       // Determine image source type based on fetched URL
       if (fetchedImageUrl.startsWith('/images/')) {
@@ -139,7 +147,12 @@ const AboutMeManagement: React.FC = () => {
       }
       
       setImageUrl(publicUrlData.publicUrl);
-      await upsertAboutMeMutation.mutateAsync({ image_url: publicUrlData.publicUrl, content: content });
+      await upsertAboutMeMutation.mutateAsync({ 
+        image_url: publicUrlData.publicUrl, 
+        content: content,
+        image_width: imageWidth, // Added
+        image_height: imageHeight, // Added
+      });
 
       return publicUrlData.publicUrl;
     },
@@ -160,7 +173,12 @@ const AboutMeManagement: React.FC = () => {
     mutationFn: async (filePath) => {
       // If it's a local path, just clear the database entry
       if (filePath.startsWith('/images/')) {
-        await upsertAboutMeMutation.mutateAsync({ image_url: null, content: content });
+        await upsertAboutMeMutation.mutateAsync({ 
+          image_url: null, 
+          content: content,
+          image_width: imageWidth, // Preserve existing dimensions
+          image_height: imageHeight, // Preserve existing dimensions
+        });
         return null;
       }
 
@@ -189,7 +207,12 @@ const AboutMeManagement: React.FC = () => {
           if (deleteError) throw deleteError;
         }
       }
-      await upsertAboutMeMutation.mutateAsync({ image_url: null, content: content });
+      await upsertAboutMeMutation.mutateAsync({ 
+        image_url: null, 
+        content: content,
+        image_width: imageWidth, // Preserve existing dimensions
+        image_height: imageHeight, // Preserve existing dimensions
+      });
       return null;
     },
     onSuccess: () => {
@@ -209,7 +232,12 @@ const AboutMeManagement: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // The imageUrl state already holds the correct value based on imageSourceType
-    upsertAboutMeMutation.mutate({ content, image_url: imageUrl });
+    upsertAboutMeMutation.mutate({ 
+      content, 
+      image_url: imageUrl,
+      image_width: imageWidth, // Added
+      image_height: imageHeight, // Added
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -391,6 +419,30 @@ const AboutMeManagement: React.FC = () => {
                 </div>
               )}
             </div>
+            {imageUrl && ( // Only show size inputs if an image is present
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="imageWidth">Image Width (e.g., 400px, 20rem, 50%)</Label>
+                  <Input
+                    id="imageWidth"
+                    value={imageWidth}
+                    onChange={(e) => setImageWidth(e.target.value)}
+                    className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                    placeholder="e.g., 400px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="imageHeight">Image Height (e.g., 400px, 20rem, auto)</Label>
+                  <Input
+                    id="imageHeight"
+                    value={imageHeight}
+                    onChange={(e) => setImageHeight(e.target.value)}
+                    className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                    placeholder="e.g., 400px"
+                  />
+                </div>
+              </div>
+            )}
             <Button type="submit" disabled={upsertAboutMeMutation.isPending}>
               {upsertAboutMeMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>

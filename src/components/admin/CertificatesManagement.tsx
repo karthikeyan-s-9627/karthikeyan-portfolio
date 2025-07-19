@@ -52,6 +52,8 @@ interface Certificate {
   description: string;
   link?: string;
   image?: string;
+  image_width?: string; // Added
+  image_height?: string; // Added
   position: number | null;
 }
 
@@ -98,7 +100,7 @@ const CertificatesManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [displayCertificates, setDisplayCertificates] = React.useState<Certificate[]>([]);
   const [newCertificate, setNewCertificate] = React.useState<Omit<Certificate, "position">>({
-    id: "", title: "", issuer: "", date: "", description: "", link: "", image: "",
+    id: "", title: "", issuer: "", date: "", description: "", link: "", image: "", image_width: "", image_height: "", // Added
   });
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingCertificate, setEditingCertificate] = React.useState<Certificate | null>(null);
@@ -111,7 +113,7 @@ const CertificatesManagement: React.FC = () => {
   const { data: certificates, isLoading, error } = useQuery<Certificate[], Error>({
     queryKey: ["certificates"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("certificates").select("*").order("position", { ascending: true, nullsFirst: false });
+      const { data, error } = await supabase.from("certificates").select("*, image_width, image_height").order("position", { ascending: true, nullsFirst: false }); // Added image_width, image_height
       if (error) throw error;
       return data;
     },
@@ -149,9 +151,9 @@ const CertificatesManagement: React.FC = () => {
   React.useEffect(() => {
     if (!isDialogOpen) {
       setEditingCertificate(null);
-      setNewCertificate({ id: "", title: "", issuer: "", date: "", description: "", link: "", image: "" });
+      setNewCertificate({ id: "", title: "", issuer: "", date: "", description: "", link: "", image: "", image_width: "", image_height: "" }); // Reset image dimensions
       setSelectedFile(null);
-      if(fileInputRef.current) fileInputRef.current.value = "";
+      if(fileInputRef.current) fileInputInputRef.current.value = "";
       setImageSourceType('url');
       setLocalImageFileName(""); // Clear local filename
     }
@@ -183,7 +185,7 @@ const CertificatesManagement: React.FC = () => {
   const updateCertificateMutation = useMutation<null, Error, Omit<Certificate, 'position'>, unknown>({
     mutationFn: async (certificate) => {
       const { error } = await supabase.from("certificates").update({
-        title: certificate.title, issuer: certificate.issuer, date: certificate.date, description: certificate.description, link: certificate.link, image: certificate.image,
+        title: certificate.title, issuer: certificate.issuer, date: certificate.date, description: certificate.description, link: certificate.link, image: certificate.image, image_width: certificate.image_width, image_height: certificate.image_height, // Added
       }).eq("id", certificate.id);
       if (error) throw error;
       return null;
@@ -240,7 +242,16 @@ const CertificatesManagement: React.FC = () => {
         }
       }
       // Update the certificate record to set image to null regardless of source
-      const { error: updateError } = await supabase.from("certificates").update({ image: null, title: certificateToUpdate.title, issuer: certificateToUpdate.issuer, date: certificateToUpdate.date, description: certificateToUpdate.description, link: certificateToUpdate.link }).eq("id", certificateId);
+      const { error: updateError } = await supabase.from("certificates").update({ 
+        image: null, 
+        title: certificateToUpdate.title, 
+        issuer: certificateToUpdate.issuer, 
+        date: certificateToUpdate.date, 
+        description: certificateToUpdate.description, 
+        link: certificateToUpdate.link,
+        image_width: certificateToUpdate.image_width, // Preserve existing dimensions
+        image_height: certificateToUpdate.image_height, // Preserve existing dimensions
+      }).eq("id", certificateId);
       if (updateError) throw updateError;
       return null;
     },
@@ -319,7 +330,15 @@ const CertificatesManagement: React.FC = () => {
   const handleEditClick = (certificate: Certificate) => {
     setEditingCertificate(certificate);
     setNewCertificate({
-      id: certificate.id, title: certificate.title, issuer: certificate.issuer, date: certificate.date, description: certificate.description, link: certificate.link || "", image: certificate.image || "",
+      id: certificate.id, 
+      title: certificate.title, 
+      issuer: certificate.issuer, 
+      date: certificate.date, 
+      description: certificate.description, 
+      link: certificate.link || "", 
+      image: certificate.image || "",
+      image_width: certificate.image_width || "", // Added
+      image_height: certificate.image_height || "", // Added
     });
     // Determine image source type based on fetched URL
     if (certificate.image?.startsWith('/images/')) {
@@ -336,7 +355,7 @@ const CertificatesManagement: React.FC = () => {
   const handleOpenNewDialog = () => {
     setEditingCertificate(null);
     setNewCertificate({
-      id: crypto.randomUUID(), title: "", issuer: "", date: "", description: "", link: "", image: "",
+      id: crypto.randomUUID(), title: "", issuer: "", date: "", description: "", link: "", image: "", image_width: "", image_height: "", // Reset image dimensions
     });
     setImageSourceType('upload'); // Default to upload for new certificates
     setLocalImageFileName("");
@@ -539,6 +558,33 @@ const CertificatesManagement: React.FC = () => {
                   )}
                 </div>
               </div>
+              {newCertificate.image && ( // Only show size inputs if an image is present
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Image Size</Label>
+                  <div className="col-span-3 grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="imageWidth">Width</Label>
+                      <Input
+                        id="imageWidth"
+                        value={newCertificate.image_width}
+                        onChange={(e) => setNewCertificate({ ...newCertificate, image_width: e.target.value })}
+                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                        placeholder="e.g., 300px"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="imageHeight">Height</Label>
+                      <Input
+                        id="imageHeight"
+                        value={newCertificate.image_height}
+                        onChange={(e) => setNewCertificate({ ...newCertificate, image_height: e.target.value })}
+                        className="mt-1 bg-input/50 border-border/50 focus:border-primary"
+                        placeholder="e.g., 200px"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <DialogFooter><Button type="submit" disabled={addCertificateMutation.isPending || updateCertificateMutation.isPending}>{editingCertificate ? (updateCertificateMutation.isPending ? "Saving..." : "Save Changes") : (addCertificateMutation.isPending ? "Adding..." : "Add Certificate")}</Button></DialogFooter>
             </form>

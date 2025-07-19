@@ -30,6 +30,8 @@ interface Certificate {
   description: string;
   link?: string;
   image?: string;
+  image_width?: string; // Added
+  image_height?: string; // Added
 }
 
 interface Project {
@@ -40,12 +42,16 @@ interface Project {
   github_link?: string;
   live_link?: string;
   image?: string;
+  image_width?: string; // Added
+  image_height?: string; // Added
 }
 
 interface AboutMeContent {
   id: string;
   content: string;
   image_url?: string;
+  image_width?: string; // Added
+  image_height?: string; // Added
   updated_at: string;
 }
 
@@ -55,6 +61,8 @@ interface Profile {
   last_name?: string;
   tagline?: string;
   hero_image_url?: string;
+  image_width?: string; // Added
+  image_height?: string; // Added
 }
 
 interface ContactInfo {
@@ -197,7 +205,7 @@ const Home = () => {
   const { data: certificates, isLoading: isLoadingCertificates, error: certificatesError } = useQuery<Certificate[], Error>({
     queryKey: ["certificates"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("certificates").select("*").order("position", { ascending: true, nullsFirst: false });
+      const { data, error } = await supabase.from("certificates").select("*, image_width, image_height").order("position", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data;
     },
@@ -207,7 +215,7 @@ const Home = () => {
   const { data: projects, isLoading: isLoadingProjects, error: projectsError } = useQuery<Project[], Error>({
     queryKey: ["projects"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*").order("position", { ascending: true, nullsFirst: false });
+      const { data, error } = await supabase.from("projects").select("*, image_width, image_height").order("position", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data;
     },
@@ -219,7 +227,7 @@ const Home = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("about_me")
-        .select("*")
+        .select("*, image_width, image_height")
         .eq("id", ABOUT_ME_SINGLETON_ID)
         .single();
       if (error) {
@@ -228,6 +236,8 @@ const Home = () => {
             id: ABOUT_ME_SINGLETON_ID,
             content: "Hello! I'm John Doe, a dedicated and enthusiastic college student with a passion for software development and problem-solving. Currently pursuing a Bachelor's degree in Computer Science, I am constantly seeking opportunities to learn and grow in the ever-evolving tech landscape.\n\nMy academic journey has equipped me with a strong foundation in data structures, algorithms, and various programming paradigms. I thrive on challenges and enjoy transforming complex ideas into functional and elegant solutions.\n\nOutside of my studies, I actively participate in coding competitions, open-source projects, and tech meetups to expand my knowledge and collaborate with fellow enthusiasts. I believe in continuous learning and am always eager to explore new technologies and methodologies.",
             image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=About+Image",
+            image_width: "400px", // Default
+            image_height: "400px", // Default
             updated_at: new Date().toISOString(),
           };
         }
@@ -243,7 +253,7 @@ const Home = () => {
     queryFn: async () => {
       const { data: usersData, error: usersError } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, tagline, hero_image_url")
+        .select("id, first_name, last_name, tagline, hero_image_url, image_width, image_height")
         .eq("is_admin", true)
         .limit(1)
         .single();
@@ -256,6 +266,8 @@ const Home = () => {
             last_name: "Doe",
             tagline: "A passionate college student building innovative solutions and exploring the frontiers of technology.",
             hero_image_url: "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image",
+            image_width: "400px", // Default
+            image_height: "400px", // Default
           };
         }
         throw usersError;
@@ -391,9 +403,11 @@ const Home = () => {
           <img
             src={profile?.hero_image_url || "https://via.placeholder.com/400x400/0000FF/FFFFFF?text=Your+Image"} // Placeholder image
             alt={`${profile?.first_name || "John"} ${profile?.last_name || "Doe"}`}
-            className="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full object-cover
-              border-4 border-primary/30
-              hover:scale-105 transition-transform duration-500 ease-in-out neon-shadow-primary"
+            className="rounded-full object-cover border-4 border-primary/30 hover:scale-105 transition-transform duration-500 ease-in-out neon-shadow-primary"
+            style={{
+              width: profile?.image_width || '400px', // Apply custom width or default
+              height: profile?.image_height || '400px', // Apply custom height or default
+            }}
           />
         </motion.div>
       </section>
@@ -443,8 +457,14 @@ const Home = () => {
                 <img
                   src={aboutMe.image_url}
                   alt="About John Doe"
-                  className="w-full max-w-sm rounded-lg object-cover shadow-2xl border-4 border-primary/50
+                  className="rounded-lg object-cover shadow-2xl border-4 border-primary/50
                     hover:scale-105 transition-transform duration-500 ease-in-out"
+                  style={{
+                    width: aboutMe?.image_width || '100%', // Apply custom width or default
+                    height: aboutMe?.image_height || 'auto', // Apply custom height or default
+                    maxWidth: '400px', // Keep max-width for responsiveness
+                    maxHeight: '400px', // Keep max-height for responsiveness
+                  }}
                 />
               )}
             </motion.div>
@@ -531,7 +551,12 @@ const Home = () => {
         ) : certificatesError ? (
           <div className="text-center text-destructive">Error loading certificates: {certificatesError.message}</div>
         ) : certificates && certificates.length > 0 ? (
-          <CertificatesCarousel certificates={certificates} />
+          <CertificatesCarousel certificates={certificates.map(cert => ({
+            ...cert,
+            image: cert.image || "https://via.placeholder.com/300x200/0000FF/FFFFFF?text=Certificate",
+            image_width: cert.image_width || "100%",
+            image_height: cert.image_height || "auto",
+          }))} />
         ) : (
           <div className="text-center text-muted-foreground">No certificates found.</div>
         )}
@@ -554,7 +579,12 @@ const Home = () => {
         ) : projectsError ? (
           <div className="text-center text-destructive">Error loading projects: {projectsError.message}</div>
         ) : projects && projects.length > 0 ? (
-          <ProjectsSlider projects={projects} />
+          <ProjectsSlider projects={projects.map(proj => ({
+            ...proj,
+            image: proj.image || "https://via.placeholder.com/500x300/0000FF/FFFFFF?text=Project",
+            image_width: proj.image_width || "100%",
+            image_height: proj.image_height || "auto",
+          }))} />
         ) : (
           <div className="text-center text-muted-foreground">No projects found.</div>
         )}
