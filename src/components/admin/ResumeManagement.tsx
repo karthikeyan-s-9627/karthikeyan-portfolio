@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, UploadCloud, FileText, Trash2 } from "lucide-react";
+import { createClient } from '@supabase/supabase-js';
 
 interface Resume {
   id: string;
@@ -17,7 +18,7 @@ interface Resume {
   updated_at: string;
 }
 
-const RESUME_SINGLETON_ID = "00000000-0000-0000-0000-000000000003"; // Matches the default ID in SQL
+const RESUME_SINGLETON_ID = "00000000-0000-0000-0000-000000000003";
 
 const DEFAULT_RESUME = {
   title: "My Resume",
@@ -39,7 +40,7 @@ const ResumeManagement: React.FC = () => {
         .eq("id", RESUME_SINGLETON_ID)
         .single();
       if (error) {
-        if (error.code === 'PGRST116') { // No rows found
+        if (error.code === 'PGRST116') {
           return {
             id: RESUME_SINGLETON_ID,
             ...DEFAULT_RESUME,
@@ -84,9 +85,24 @@ const ResumeManagement: React.FC = () => {
 
   const uploadFileMutation = useMutation<string, Error, File, unknown>({
     mutationFn: async (file) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("User not authenticated.");
+
+      const authenticatedSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          },
+        }
+      );
+
       const fileExtension = file.name.split('.').pop();
       const fileName = `${RESUME_SINGLETON_ID}.${fileExtension}`;
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await authenticatedSupabase.storage
         .from("resumes")
         .upload(fileName, file, {
           upsert: true,
@@ -94,7 +110,7 @@ const ResumeManagement: React.FC = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage
+      const { data: publicUrlData } = authenticatedSupabase.storage
         .from("resumes")
         .getPublicUrl(fileName);
 
@@ -120,10 +136,25 @@ const ResumeManagement: React.FC = () => {
 
   const deleteFileMutation = useMutation<null, Error, string, unknown>({
     mutationFn: async (filePath) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("User not authenticated.");
+
+      const authenticatedSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          },
+        }
+      );
+
       const fileName = filePath.split('/').pop();
       if (!fileName) throw new Error("Invalid file path.");
 
-      const { error: deleteError } = await supabase.storage
+      const { error: deleteError } = await authenticatedSupabase.storage
         .from("resumes")
         .remove([fileName]);
 

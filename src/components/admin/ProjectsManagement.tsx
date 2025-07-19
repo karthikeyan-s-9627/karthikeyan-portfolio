@@ -43,6 +43,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import ImageEditorDialog from "@/components/ImageEditorDialog";
+import { createClient } from '@supabase/supabase-js';
 
 interface Project {
   id: string;
@@ -237,7 +238,7 @@ const ProjectsManagement: React.FC = () => {
         }
       }
       // Update the project record to set image to null
-      const { error: updateError } = await supabase.from("projects").update({ image: null }).eq("id", projectId);
+      const { error: updateError } = await supabase.from("projects").update({ image: null, title: projectToUpdate.title, description: projectToUpdate.description, technologies: projectToUpdate.technologies, github_link: projectToUpdate.github_link, live_link: projectToUpdate.live_link }).eq("id", projectId);
       if (updateError) throw updateError;
       return null;
     },
@@ -254,17 +255,32 @@ const ProjectsManagement: React.FC = () => {
 
   const uploadFileMutation = useMutation<string, Error, { file: File; projectId: string }, unknown>({
     mutationFn: async ({ file, projectId }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("User not authenticated.");
+
+      const authenticatedSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          },
+        }
+      );
+
       const fileExtension = file.name.split('.').pop();
       const fileName = `${projectId}-project.${fileExtension}`;
       const filePath = `${fileName}`;
       
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await authenticatedSupabase.storage
         .from("images")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage
+      const { data: publicUrlData } = authenticatedSupabase.storage
         .from("images")
         .getPublicUrl(filePath);
 

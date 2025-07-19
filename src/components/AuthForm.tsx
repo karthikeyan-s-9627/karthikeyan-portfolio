@@ -99,7 +99,6 @@ const AuthForm: React.FC = () => {
               placeholder="admin@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               className="mt-1 bg-input/50 border-border/50 focus:border-primary"
             />
           </div>
@@ -111,7 +110,6 @@ const AuthForm: React.FC = () => {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               className="mt-1 bg-input/50 border-border/50 focus:border-primary"
             />
           </div>

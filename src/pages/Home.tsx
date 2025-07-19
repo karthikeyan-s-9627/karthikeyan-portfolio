@@ -679,7 +679,6 @@ const Home = () => {
                       placeholder="Your Name"
                       value={contactName}
                       onChange={(e) => setContactName(e.target.value)}
-                      required
                       className="mt-1 bg-input/50 border-border/50 focus:border-primary"
                     />
                   </div>
@@ -691,7 +690,6 @@ const Home = () => {
                       placeholder="your@email.com"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
-                      required
                       className="mt-1 bg-input/50 border-border/50 focus:border-primary"
                     />
                   </div>
@@ -703,7 +701,6 @@ const Home = () => {
                       rows={5}
                       value={contactMessage}
                       onChange={(e) => setContactMessage(e.target.value)}
-                      required
                       className="mt-1 bg-input/50 border-border/50 focus:border-primary"
                     />
                   </div>
