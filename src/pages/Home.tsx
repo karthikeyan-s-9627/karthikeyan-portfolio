@@ -547,15 +547,15 @@ const Home = () => {
           <div className="relative w-full max-w-4xl flex justify-center">
             {totalCertificateCount > 0 && (
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: 20 }} // Changed animation direction
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, amount: 0.5 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:block" // Positioned left of the title on desktop
+                className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:block" // Changed to right-0
               >
                 <Link to="/certificates">
                   <Button variant="outline" size="sm" className="text-md font-semibold">
-                    <ExternalLink className="mr-2 h-4 w-4" /> View All
+                    View All <ExternalLink className="ml-2 h-4 w-4" /> {/* Icon moved to the right */}
                   </Button>
                 </Link>
               </motion.div>
