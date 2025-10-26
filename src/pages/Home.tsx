@@ -14,6 +14,7 @@ import CertificatesCarousel from "@/components/CertificatesCarousel";
 import ProjectsSlider from "@/components/ProjectsSlider";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom"; // Import Link
 
 // Define interfaces for fetched data
 interface Skill {
@@ -206,15 +207,24 @@ const Home = () => {
     },
   });
 
-  // Fetch certificates data from Supabase
-  const { data: certificates, isLoading: isLoadingCertificates, error: certificatesError } = useQuery<Certificate[], Error>({
-    queryKey: ["certificates"],
+  // Fetch certificates data from Supabase (Top 10 for carousel)
+  const { data: certificatesData, isLoading: isLoadingCertificates, error: certificatesError } = useQuery<{ certificates: Certificate[], totalCount: number }, Error>({
+    queryKey: ["certificates_home"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("certificates").select("*, image_width, image_height").order("position", { ascending: true, nullsFirst: false });
+      const { data, error, count } = await supabase
+        .from("certificates")
+        .select("*, image_width, image_height", { count: 'exact' })
+        .order("position", { ascending: true, nullsFirst: false })
+        .limit(10); // Limit to 10 for the carousel
+
       if (error) throw error;
-      return data;
+      return { certificates: data || [], totalCount: count || 0 };
     },
   });
+
+  const certificates = certificatesData?.certificates;
+  const totalCertificateCount = certificatesData?.totalCount || 0;
+
 
   // Fetch projects data from Supabase
   const { data: projects, isLoading: isLoadingProjects, error: projectsError } = useQuery<Project[], Error>({
@@ -546,12 +556,29 @@ const Home = () => {
         ) : certificatesError ? (
           <div className="text-center text-destructive">Error loading certificates: {certificatesError.message}</div>
         ) : certificates && certificates.length > 0 ? (
-          <CertificatesCarousel certificates={certificates.map(cert => ({
-            ...cert,
-            image: cert.image || "https://via.placeholder.com/300x200/0000FF/FFFFFF?text=Certificate",
-            image_width: cert.image_width || "100%",
-            image_height: cert.image_height || "auto",
-          }))} />
+          <>
+            <CertificatesCarousel certificates={certificates.map(cert => ({
+              ...cert,
+              image: cert.image || "https://via.placeholder.com/300x200/0000FF/FFFFFF?text=Certificate",
+              image_width: cert.image_width || "100%",
+              image_height: cert.image_height || "auto",
+            }))} />
+            {totalCertificateCount > 10 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="mt-8"
+              >
+                <Link to="/certificates">
+                  <Button variant="outline" size="lg" className="text-lg font-semibold">
+                    View All Certificates <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </motion.div>
+            )}
+          </>
         ) : (
           <div className="text-center text-muted-foreground">No certificates found.</div>
         )}

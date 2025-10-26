@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import MainLayout from "./components/layout/MainLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import Home from "./pages/Home"; // Import the Home component
+import CertificatesPage from "./pages/Certificates"; // Import the new CertificatesPage
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,14 @@ const App = () => (
               element={
                 <MainLayout>
                   <Home />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/certificates"
+              element={
+                <MainLayout>
+                  <CertificatesPage />
                 </MainLayout>
               }
             />
