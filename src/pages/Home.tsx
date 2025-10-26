@@ -563,13 +563,13 @@ const Home = () => {
               image_width: cert.image_width || "100%",
               image_height: cert.image_height || "auto",
             }))} />
-            {totalCertificateCount > 0 && ( // Changed condition to totalCertificateCount > 0
+            {totalCertificateCount > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="mt-8"
+                className="mt-8" // Added margin top to push it down
               >
                 <Link to="/certificates">
                   <Button variant="outline" size="lg" className="text-lg font-semibold">
