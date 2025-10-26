@@ -547,15 +547,15 @@ const Home = () => {
           <div className="relative w-full max-w-4xl flex justify-center">
             {totalCertificateCount > 0 && (
               <motion.div
-                initial={{ opacity: 0, x: 20 }} // Changed animation direction
+                initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, amount: 0.5 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:block" // Changed to right-0
+                className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:block" // Positioned right of the title on desktop
               >
                 <Link to="/certificates">
                   <Button variant="outline" size="sm" className="text-md font-semibold">
-                    View All <ExternalLink className="ml-2 h-4 w-4" /> {/* Icon moved to the right */}
+                    View All <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
               </motion.div>
@@ -608,15 +608,54 @@ const Home = () => {
 
       {/* Projects Section */}
       <section id="projects" className="min-h-screen flex flex-col items-center justify-center p-4 mb-16">
-        <motion.h1
-          className="text-4xl md:text-6xl font-extrabold mb-12 text-foreground drop-shadow-lg"
-          variants={sectionTitleVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.5 }}
-        >
-          My <span className="text-primary">Projects</span>
-        </motion.h1>
+        <div className="w-full max-w-6xl flex flex-col items-center mb-12">
+          {/* Container for the title and button, allowing the button to be positioned relative to the title */}
+          <div className="relative w-full max-w-4xl flex justify-center">
+            {projects && projects.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: false, amount: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:block" // Positioned right of the title on desktop
+              >
+                {/* Since there is no dedicated /projects page, we link to the section itself or use a generic button */}
+                <a href="#projects">
+                  <Button variant="outline" size="sm" className="text-md font-semibold">
+                    View More <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+              </motion.div>
+            )}
+            
+            <motion.h1
+              className="text-4xl md:text-6xl font-extrabold text-foreground drop-shadow-lg text-center"
+              variants={sectionTitleVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.5 }}
+            >
+              My <span className="text-primary">Projects</span>
+            </motion.h1>
+          </div>
+          
+          {/* Mobile button centered below the title */}
+          {projects && projects.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="mt-4 md:hidden"
+              >
+                <a href="#projects">
+                  <Button variant="outline" size="sm" className="text-md font-semibold">
+                    View More Projects <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+              </motion.div>
+            )}
+        </div>
 
         {isLoadingProjects ? (
           <div className="text-center text-muted-foreground">Loading projects...</div>
