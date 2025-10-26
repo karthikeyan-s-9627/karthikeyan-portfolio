@@ -540,45 +540,67 @@ const Home = () => {
       </section>
 
       {/* Certificates Section */}
-      <section id="certificates" className="min-h-screen flex flex-col items-center justify-center p-4">
-        <motion.h1
-          className="text-4xl md:text-6xl font-extrabold mb-8 text-foreground drop-shadow-lg"
-          variants={sectionTitleVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.5 }}
-        >
-          My <span className="text-primary">Certificates</span>
-        </motion.h1>
+      <section id="certificates" className="flex flex-col items-center p-4 pt-20">
+        
+        <div className="w-full max-w-6xl flex flex-col items-center mb-12">
+          {/* Container for the title and button, allowing the button to be positioned relative to the title */}
+          <div className="relative w-full max-w-4xl flex justify-center">
+            {totalCertificateCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: false, amount: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:block" // Positioned left of the title on desktop
+              >
+                <Link to="/certificates">
+                  <Button variant="outline" size="sm" className="text-md font-semibold">
+                    <ExternalLink className="mr-2 h-4 w-4" /> View All
+                  </Button>
+                </Link>
+              </motion.div>
+            )}
+            
+            <motion.h1
+              className="text-4xl md:text-6xl font-extrabold text-foreground drop-shadow-lg text-center"
+              variants={sectionTitleVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.5 }}
+            >
+              My <span className="text-primary">Certificates</span>
+            </motion.h1>
+          </div>
+          
+          {/* Mobile button centered below the title */}
+          {totalCertificateCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="mt-4 md:hidden"
+              >
+                <Link to="/certificates">
+                  <Button variant="outline" size="sm" className="text-md font-semibold">
+                    View All Certificates <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </motion.div>
+            )}
+        </div>
 
         {isLoadingCertificates ? (
           <div className="text-center text-muted-foreground">Loading certificates...</div>
         ) : certificatesError ? (
           <div className="text-center text-destructive">Error loading certificates: {certificatesError.message}</div>
         ) : certificates && certificates.length > 0 ? (
-          <>
-            <CertificatesCarousel certificates={certificates.map(cert => ({
-              ...cert,
-              image: cert.image || "https://via.placeholder.com/300x200/0000FF/FFFFFF?text=Certificate",
-              image_width: cert.image_width || "100%",
-              image_height: cert.image_height || "auto",
-            }))} />
-            {totalCertificateCount > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="mt-8" // Added margin top to push it down
-              >
-                <Link to="/certificates">
-                  <Button variant="outline" size="lg" className="text-lg font-semibold">
-                    View All Certificates <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </motion.div>
-            )}
-          </>
+          <CertificatesCarousel certificates={certificates.map(cert => ({
+            ...cert,
+            image: cert.image || "https://via.placeholder.com/300x200/0000FF/FFFFFF?text=Certificate",
+            image_width: cert.image_width || "100%",
+            image_height: cert.image_height || "auto",
+          }))} />
         ) : (
           <div className="text-center text-muted-foreground">No certificates found.</div>
         )}
