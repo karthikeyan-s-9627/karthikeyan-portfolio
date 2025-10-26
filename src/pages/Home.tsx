@@ -619,12 +619,11 @@ const Home = () => {
                 transition={{ delay: 0.2, duration: 0.5 }}
                 className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:block" // Positioned right of the title on desktop
               >
-                {/* Since there is no dedicated /projects page, we link to the section itself or use a generic button */}
-                <a href="#projects">
+                <Link to="/projects"> {/* Updated to use Link and navigate to /projects */}
                   <Button variant="outline" size="sm" className="text-md font-semibold">
                     View More <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>
-                </a>
+                </Link>
               </motion.div>
             )}
             
@@ -648,11 +647,11 @@ const Home = () => {
                 transition={{ delay: 0.2, duration: 0.5 }}
                 className="mt-4 md:hidden"
               >
-                <a href="#projects">
+                <Link to="/projects"> {/* Updated to use Link and navigate to /projects */}
                   <Button variant="outline" size="sm" className="text-md font-semibold">
                     View More Projects <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>
-                </a>
+                </Link>
               </motion.div>
             )}
         </div>
