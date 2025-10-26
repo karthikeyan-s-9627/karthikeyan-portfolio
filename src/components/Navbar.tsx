@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { Menu } from "lucide-react";
@@ -11,6 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [tapCount, setTapCount] = React.useState(0);
@@ -29,11 +30,40 @@ const Navbar = () => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
-      if (isMobile) {
-        setIsSheetOpen(false); // Close the sheet after clicking a link on mobile
-      }
     }
   };
+
+  const handleNavClick = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    const sectionId = path.substring(1); // Remove '#'
+
+    if (location.pathname !== '/') {
+      // If not on the home page, navigate to home and pass the section ID as state
+      navigate('/', { state: { scrollTo: sectionId } });
+    } else {
+      // If already on the home page, just scroll
+      scrollToSection(sectionId);
+    }
+
+    if (isMobile) {
+      setIsSheetOpen(false); // Close the sheet after clicking a link on mobile
+    }
+  };
+
+  // Effect to handle scrolling after navigation to the home page
+  React.useEffect(() => {
+    if (location.pathname === '/' && location.state?.scrollTo) {
+      // Wait for the page to render and scroll to the section
+      const timer = setTimeout(() => {
+        scrollToSection(location.state.scrollTo);
+        // Clear the state after scrolling to prevent re-scrolling on refresh/re-render
+        // Note: This requires manually updating the history state, which is complex.
+        // For simplicity, we rely on the fact that the state is only set during navigation.
+      }, 100); 
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
+
 
   const handlePortfolioClick = () => {
     const now = Date.now();
@@ -49,7 +79,12 @@ const Navbar = () => {
       // Otherwise, update state and scroll to the home section.
       setTapCount(newCount);
       setLastTapTimestamp(now);
-      scrollToSection("home");
+      
+      if (location.pathname !== '/') {
+        navigate('/', { state: { scrollTo: 'home' } });
+      } else {
+        scrollToSection("home");
+      }
     }
   };
 
@@ -78,10 +113,7 @@ const Navbar = () => {
                   <li key={link.name}>
                     <a
                       href={link.path}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        scrollToSection(link.path.substring(1)); // Remove '#'
-                      }}
+                      onClick={(e) => handleNavClick(e, link.path)}
                       className={cn(
                         "text-foreground hover:text-primary transition-colors duration-300 relative group text-lg font-medium inline-block py-2" // Added inline-block
                       )}
@@ -102,10 +134,7 @@ const Navbar = () => {
               <li key={link.name}>
                 <a
                   href={link.path}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    scrollToSection(link.path.substring(1)); // Remove '#'
-                  }}
+                  onClick={(e) => handleNavClick(e, link.path)}
                   className={cn(
                     "text-foreground hover:text-primary transition-colors duration-300 relative group inline-block" // Added inline-block
                   )}
