@@ -8,6 +8,7 @@ import { Award, ExternalLink, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useScrollToTop } from "@/hooks/use-scroll-to-top";
 
 interface Certificate {
   id: string;
@@ -23,6 +24,7 @@ interface Certificate {
 
 const CertificatesPage: React.FC = () => {
   const navigate = useNavigate();
+  useScrollToTop(); // Use the new hook
 
   // Fetch ALL certificates data from Supabase
   const { data: certificates, isLoading, error } = useQuery<Certificate[], Error>({

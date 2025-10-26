@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useScrollToTop } from "@/hooks/use-scroll-to-top";
 
 interface Project {
   id: string;
@@ -24,6 +25,7 @@ interface Project {
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
+  useScrollToTop(); // Use the new hook
 
   // Fetch ALL projects data from Supabase
   const { data: projects, isLoading, error } = useQuery<Project[], Error>({
