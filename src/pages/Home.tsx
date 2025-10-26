@@ -563,7 +563,7 @@ const Home = () => {
               image_width: cert.image_width || "100%",
               image_height: cert.image_height || "auto",
             }))} />
-            {totalCertificateCount > 10 && (
+            {totalCertificateCount > 0 && ( // Changed condition to totalCertificateCount > 0
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
